@@ -1,19 +1,28 @@
 import { FiSearch, FiUser } from 'react-icons/fi';
 
 export default function Header() {
+  const handleLogoClick = () => {
+    window.location.href = '/';
+  };
+
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-200">
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <div className="flex items-center gap-2">
-            <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-pink-500 rounded-full flex items-center justify-center">
-              <span className="text-white font-bold text-lg">YM</span>
-            </div>
-            <h1 className="text-gray-900 text-xl font-bold hidden sm:block">
+          <button
+            onClick={handleLogoClick}
+            className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+          >
+            <img
+              src="https://music.youtube.com/img/favicon_144.png"
+              alt="YouTube Music"
+              className="h-8 w-8"
+            />
+            <h1 className="text-gray-900 text-xl font-medium hidden sm:block">
               YouTube Music
             </h1>
-          </div>
+          </button>
 
           {/* Search Bar */}
           <div className="flex-1 max-w-2xl mx-4 sm:mx-8">
