@@ -1,10 +1,13 @@
-import { useState } from 'react';
+import { useLocalStorage } from './hooks';
 import { Header, Sidebar, PlayerBar } from './components';
 import HomePage from './pages/HomePage';
 import { MOCK_SONGS } from './data/mockData';
 
 function App() {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useLocalStorage(
+    'sidebar-open',
+    true
+  );
 
   const toggleSidebar = () => {
     setIsSidebarOpen((prev) => !prev);
