@@ -2,7 +2,7 @@ import { useLocalStorage } from './hooks';
 import { Header, Sidebar, PlayerBar } from './components';
 import HomePage from './pages/HomePage';
 import ExplorePage from './pages/ExplorePage';
-import { MOCK_SONGS } from './data/mockData';
+import { MOCK_SONGS, MOCK_USER } from './data';
 
 function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useLocalStorage('sidebar-open', true);
@@ -28,7 +28,7 @@ function App() {
         return <ExplorePage isSidebarOpen={isSidebarOpen} />;
       case 'library':
         return (
-          <div className={`min-h-screen bg-white pt-16 pb-20 transition-all duration-300 ${
+          <div className={`min-h-screen bg-white pt-16 pb-28 transition-all duration-300 ${
             isSidebarOpen ? 'pl-0 lg:pl-64 2xl:pl-20' : 'pl-0 lg:pl-20'
           }`}>
             <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -39,7 +39,7 @@ function App() {
         );
       case 'recent':
         return (
-          <div className={`min-h-screen bg-white pt-16 pb-20 transition-all duration-300 ${
+          <div className={`min-h-screen bg-white pt-16 pb-28 transition-all duration-300 ${
             isSidebarOpen ? 'pl-0 lg:pl-64 2xl:pl-20' : 'pl-0 lg:pl-20'
           }`}>
             <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -55,7 +55,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-white">
-      <Header onMenuClick={toggleSidebar} />
+      <Header onMenuClick={toggleSidebar} user={MOCK_USER} />
       <Sidebar
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
