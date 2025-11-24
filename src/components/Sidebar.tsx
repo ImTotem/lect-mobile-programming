@@ -38,7 +38,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
       {/* Sidebar */}
       <aside
-        className={`fixed left-0 top-16 bottom-0 z-40 bg-white/95 backdrop-blur-sm border-r border-gray-200 transition-all duration-300 overflow-hidden ${
+        className={`fixed left-0 top-16 bottom-20 z-40 bg-white/95 backdrop-blur-sm border-r border-gray-200 transition-all duration-300 overflow-hidden ${
           // 모바일: 열림/닫힘, 데스크톱: 확장/축소
           isOpen
             ? 'w-64 translate-x-0'

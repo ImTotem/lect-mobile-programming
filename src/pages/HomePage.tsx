@@ -22,9 +22,9 @@ export default function HomePage({ isSidebarOpen }: HomePageProps) {
 
   return (
     <div
-      className={`min-h-screen bg-gradient-to-b from-gray-50 via-white to-gray-50 text-gray-900 pt-16 transition-all duration-300 ${
+      className={`min-h-screen bg-gradient-to-b from-gray-50 via-white to-gray-50 text-gray-900 pt-16 pb-20 transition-all duration-300 ${
         isSidebarOpen 
-          ? 'pl-0 lg:pl-64 xl:pl-20' 
+          ? 'pl-0 lg:pl-64 2xl:pl-20' 
           : 'pl-0 lg:pl-20'
       }`}
     >
