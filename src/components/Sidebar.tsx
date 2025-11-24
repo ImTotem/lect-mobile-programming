@@ -5,14 +5,16 @@ import NavItem from './NavItem';
 interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
+  currentPage: 'home' | 'explore' | 'library' | 'recent';
+  onNavigate: (page: 'home' | 'explore' | 'library' | 'recent') => void;
 }
 
-export default function Sidebar({ isOpen, onClose }: SidebarProps) {
+export default function Sidebar({ isOpen, onClose, currentPage, onNavigate }: SidebarProps) {
   const navItems = [
-    { icon: FiHome, label: '홈', active: true },
-    { icon: FiMusic, label: '탐색', active: false },
-    { icon: FiHeart, label: '보관함', active: false },
-    { icon: FiClock, label: '최근 재생', active: false },
+    { icon: FiHome, label: '홈', page: 'home' as const },
+    { icon: FiMusic, label: '탐색', page: 'explore' as const },
+    { icon: FiHeart, label: '보관함', page: 'library' as const },
+    { icon: FiClock, label: '최근 재생', page: 'recent' as const },
   ];
 
   // 모바일에서 사이드바 열릴 때 스크롤 방지
@@ -65,8 +67,15 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                 key={item.label}
                 icon={item.icon}
                 label={item.label}
-                active={item.active}
+                active={currentPage === item.page}
                 isOpen={isOpen}
+                onClick={() => {
+                  onNavigate(item.page);
+                  // 모바일에서는 네비게이션 후 사이드바 닫기
+                  if (window.innerWidth < 1024) {
+                    onClose();
+                  }
+                }}
               />
             ))}
           </nav>
