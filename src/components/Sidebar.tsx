@@ -1,5 +1,6 @@
 import { FiHome, FiMusic, FiHeart, FiClock, FiX } from 'react-icons/fi';
 import { useEffect } from 'react';
+import NavItem from './NavItem';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -39,7 +40,6 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       {/* Sidebar */}
       <aside
         className={`fixed left-0 top-16 bottom-20 z-40 bg-white/95 backdrop-blur-sm border-r border-gray-200 transition-all duration-300 overflow-hidden ${
-          // 모바일: 열림/닫힘, 데스크톱: 확장/축소
           isOpen
             ? 'w-64 translate-x-0'
             : 'w-0 -translate-x-full lg:w-20 lg:translate-x-0'
@@ -60,26 +60,15 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
           {/* Navigation */}
           <nav className="flex flex-col gap-2 p-4">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              return (
-                <button
-                  key={item.label}
-                  className={`flex items-center gap-4 rounded-lg transition-colors relative ${
-                    item.active
-                      ? 'bg-red-50 text-red-500'
-                      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                  } ${isOpen ? 'px-4 py-3' : 'px-3 py-3 justify-center'}`}
-                >
-                  <Icon className="w-6 h-6 flex-shrink-0" />
-                  {isOpen && (
-                    <span className="font-medium whitespace-nowrap">
-                      {item.label}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
+            {navItems.map((item) => (
+              <NavItem
+                key={item.label}
+                icon={item.icon}
+                label={item.label}
+                active={item.active}
+                isOpen={isOpen}
+              />
+            ))}
           </nav>
         </div>
       </aside>

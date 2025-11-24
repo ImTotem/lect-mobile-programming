@@ -1,3 +1,11 @@
 export { default as Header } from './Header';
 export { default as Sidebar } from './Sidebar';
 export { default as PlayerBar } from './PlayerBar';
+export { default as Logo } from './Logo';
+export { default as SearchBar } from './SearchBar';
+export { default as UserButton } from './UserButton';
+export { default as NavItem } from './NavItem';
+export { default as ProgressBar } from './ProgressBar';
+export { default as SongInfo } from './SongInfo';
+export { default as PlayerControls } from './PlayerControls';
+export { default as VolumeControl } from './VolumeControl';
