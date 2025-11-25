@@ -115,16 +115,16 @@ export async function getFeaturedPlaylists(): Promise<Playlist[]> {
   try {
     // Spotify의 유명 플레이리스트 ID들
     const playlistIds = [
-      '37i9dQZF1DXcBWIGoYBM5M', // Today's Top Hits
-      '37i9dQZF1DX0XUsuxWHRQd', // RapCaviar
-      '37i9dQZF1DX4dyzvuaRJ0n', // mint
-      '37i9dQZF1DWXRqgorJj26U', // Rock Classics
-      '37i9dQZF1DX4SBhb3fqCJd', // Are & Be
-      '37i9dQZF1DX1lVhptIYRda', // Hot Country
-      '37i9dQZF1DX4JAvHpjipBk', // New Music Friday
-      '37i9dQZF1DWZeKCadgRdKQ', // Deep Focus
-      '37i9dQZF1DX3rxVfibe1L0', // Mood Booster
-      '37i9dQZF1DWSXBu5naYCM9', // Chill Hits
+      '1ZiIGn61ZrbTkpNLJ27oYq', // Today's Top Hits Korea
+      '6eqBL2l2SKQkLkPbRC3GdD', // RapCaviar
+      '6Lftw5umRdQXZKXOLEzslQ', // mint
+      '77PHLTDJEymzhZoqTlUeCJ', // Rock Classics
+      '3Y2954J7rvKBavRsJvUkYT', // Are & Be
+      '0DUV7ua5KYFjeCm9PdxCL8', // Hot Country
+      '2GjntU7hrF6bUiZRDXjtmF', // New Music Friday Korea
+      '4bGl1FHJUyPcdPVWJCOKaI', // Deep Focus
+      '2gxSFvKsFPubXAZPgm8jGE', // Mood Booster
+      '4zRrdC2uBzCCf6X7DXdmLU', // Chill Hits
     ];
 
     const playlists: Playlist[] = [];
