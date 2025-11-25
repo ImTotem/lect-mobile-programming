@@ -1,8 +1,8 @@
 import type { Song, Playlist } from '../types/music';
 
 // Spotify API 설정
-const SPOTIFY_CLIENT_ID = '32f4f494ed9849a496a483f2f475b940';
-const SPOTIFY_CLIENT_SECRET = '5591f2be7a7d4274b3792c735c778f28';
+const SPOTIFY_CLIENT_ID = import.meta.env.VITE_SPOTIFY_CLIENT_ID;
+const SPOTIFY_CLIENT_SECRET = import.meta.env.VITE_SPOTIFY_CLIENT_SECRET;
 
 let accessToken: string = '';
 let tokenExpiry: number = 0;
@@ -33,7 +33,7 @@ async function getAccessToken(): Promise<string> {
 
     const data = await response.json();
     accessToken = data.access_token;
-    tokenExpiry = Date.now() + (data.expires_in - 60) * 1000; // 1분 여유
+    tokenExpiry = Date.now() + (data.expires_in - 60) * 1000;
 
     console.log('✅ Spotify access token obtained');
     return accessToken;
@@ -88,14 +88,12 @@ export async function searchMusic(query: string): Promise<Song[]> {
 // 인기 음악 가져오기 (/tracks 엔드포인트 사용)
 export async function getTrendingMusic(): Promise<Song[]> {
   try {
-    // /tracks 엔드포인트로 변경
     const data = await spotifyFetch(
       '/playlists/3tUdrnfVjOXbHFvD3sijQ2/tracks?limit=20'
     );
 
-    // items 배열에서 track 정보 추출
     return data.items
-      .filter((item: any) => item.track && !item.is_local) // track이 있고 로컬 파일이 아닌 것만
+      .filter((item: any) => item.track && !item.is_local)
       .map((item: any) => ({
         id: item.track.id,
         title: item.track.name,
@@ -112,42 +110,49 @@ export async function getTrendingMusic(): Promise<Song[]> {
   }
 }
 
-// 추천 플레이리스트 가져오기 (카테고리 기반으로 변경)
+// 추천 플레이리스트 가져오기 (유명 플레이리스트 ID 직접 사용)
 export async function getFeaturedPlaylists(): Promise<Playlist[]> {
   try {
-    // 여러 카테고리에서 플레이리스트 가져오기
-    const categories = ['toplists', 'kpop', 'pop', 'hiphop'];
-    const allPlaylists: Playlist[] = [];
+    // Spotify의 유명 플레이리스트 ID들
+    const playlistIds = [
+      '37i9dQZF1DXcBWIGoYBM5M', // Today's Top Hits
+      '37i9dQZF1DX0XUsuxWHRQd', // RapCaviar
+      '37i9dQZF1DX4dyzvuaRJ0n', // mint
+      '37i9dQZF1DWXRqgorJj26U', // Rock Classics
+      '37i9dQZF1DX4SBhb3fqCJd', // Are & Be
+      '37i9dQZF1DX1lVhptIYRda', // Hot Country
+      '37i9dQZF1DX4JAvHpjipBk', // New Music Friday
+      '37i9dQZF1DWZeKCadgRdKQ', // Deep Focus
+      '37i9dQZF1DX3rxVfibe1L0', // Mood Booster
+      '37i9dQZF1DWSXBu5naYCM9', // Chill Hits
+    ];
 
-    for (const categoryId of categories) {
+    const playlists: Playlist[] = [];
+
+    for (const id of playlistIds.slice(0, 8)) {
       try {
-        const data = await spotifyFetch(
-          `/browse/categories/${categoryId}/playlists?limit=3`
-        );
-
-        const playlists = data.playlists.items.map((playlist: any) => ({
-          id: playlist.id,
-          title: playlist.name,
-          description: playlist.description || '',
-          thumbnail: playlist.images[0]?.url || '',
-          tracksCount: playlist.tracks.total,
-          spotifyUrl: playlist.external_urls.spotify,
-        }));
-
-        allPlaylists.push(...playlists);
+        const data = await spotifyFetch(`/playlists/${id}`);
+        playlists.push({
+          id: data.id,
+          title: data.name,
+          description: data.description || '',
+          thumbnail: data.images[0]?.url || '',
+          tracksCount: data.tracks.total,
+          spotifyUrl: data.external_urls.spotify,
+        });
       } catch (error) {
-        console.warn(`Failed to fetch ${categoryId} playlists:`, error);
+        console.warn(`Failed to fetch playlist ${id}:`, error);
       }
     }
 
-    return allPlaylists.slice(0, 10); // 최대 10개
+    return playlists;
   } catch (error) {
     console.error('Featured playlists error:', error);
     throw error;
   }
 }
 
-// 플레이리스트 상세 정보 가져오기
+// 플레이리스트 트랙 가져오기
 export async function getPlaylistTracks(playlistId: string): Promise<Song[]> {
   try {
     const data = await spotifyFetch(`/playlists/${playlistId}/tracks?limit=50`);
@@ -166,31 +171,6 @@ export async function getPlaylistTracks(playlistId: string): Promise<Song[]> {
       }));
   } catch (error) {
     console.error('Playlist tracks error:', error);
-    throw error;
-  }
-}
-
-// 새 앨범 가져오기
-export async function getNewReleases(): Promise<Song[]> {
-  try {
-    const data = await spotifyFetch('/browse/new-releases?limit=20');
-
-    return data.albums.items.flatMap(
-      (album: any) =>
-        album.tracks?.items?.slice(0, 1).map((track: any) => ({
-          id: track.id || album.id,
-          title: track.name || album.name,
-          artist: album.artists.map((a: any) => a.name).join(', '),
-          album: album.name,
-          thumbnail: album.images[0]?.url || '',
-          duration: track.duration_ms
-            ? formatDuration(Math.floor(track.duration_ms / 1000))
-            : '3:00',
-          spotifyUrl: album.external_urls.spotify,
-        })) || []
-    );
-  } catch (error) {
-    console.error('New releases error:', error);
     throw error;
   }
 }

@@ -4,7 +4,6 @@ export {
   getTrendingMusic,
   getFeaturedPlaylists,
   getPlaylistTracks,
-  getNewReleases,
   formatDuration,
   playPreview,
 } from './spotify';
