@@ -4,6 +4,7 @@ import QuickPlaySection from '../components/home/QuickPlaySection';
 import PlaylistSection from '../components/home/PlaylistSection';
 import ChartSection from '../components/home/ChartSection';
 import { getTrendingMusic, getFeaturedPlaylists } from '../services';
+import { usePlayer } from '../contexts';
 import type { Song, Playlist } from '../types/music';
 
 interface HomePageProps {
@@ -14,8 +15,8 @@ export default function HomePage({ isSidebarOpen }: HomePageProps) {
   const [trendingSongs, setTrendingSongs] = useState<Song[]>([]);
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { playSong } = usePlayer();
 
-  // 데이터 가져오기
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
@@ -37,8 +38,7 @@ export default function HomePage({ isSidebarOpen }: HomePageProps) {
   }, []);
 
   const handleSongClick = (song: Song) => {
-    console.log('Song clicked:', song);
-    // TODO: 음악 재생 로직 구현
+    playSong(song);
   };
 
   const handlePlaylistClick = (playlist: Playlist) => {

@@ -1,8 +1,8 @@
 import { useLocalStorage } from './hooks';
+import { PlayerProvider } from './contexts';
 import { Header, Sidebar, PlayerBar } from './components';
 import HomePage from './pages/HomePage';
 import ExplorePage from './pages/ExplorePage';
-import { MOCK_SONGS, MOCK_USER } from './data';
 
 function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useLocalStorage('sidebar-open', true);
@@ -16,10 +16,6 @@ function App() {
     setCurrentPage(page);
   };
 
-  // 현재 재생 중인 곡 (임시로 첫 번째 곡)
-  const currentSong = MOCK_SONGS[0];
-
-  // 페이지 렌더링
   const renderPage = () => {
     switch (currentPage) {
       case 'home':
@@ -54,17 +50,19 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
-      <Header onMenuClick={toggleSidebar} user={MOCK_USER} />
-      <Sidebar
-        isOpen={isSidebarOpen}
-        onClose={() => setIsSidebarOpen(false)}
-        currentPage={currentPage}
-        onNavigate={handleNavigate}
-      />
-      {renderPage()}
-      <PlayerBar currentSong={currentSong} />
-    </div>
+    <PlayerProvider>
+      <div className="min-h-screen bg-white">
+        <Header onMenuClick={toggleSidebar} />
+        <Sidebar
+          isOpen={isSidebarOpen}
+          onClose={() => setIsSidebarOpen(false)}
+          currentPage={currentPage}
+          onNavigate={handleNavigate}
+        />
+        {renderPage()}
+        <PlayerBar />
+      </div>
+    </PlayerProvider>
   );
 }
 
