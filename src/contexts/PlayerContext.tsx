@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useRef, ReactNode } from 'react';
 import type { Song } from '../types/music';
+import { getSongStreamUrl } from '../services/ytmusic';
 
 interface PlayerContextType {
   currentSong: Song | null;
@@ -25,44 +26,84 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   const [volume, setVolumeState] = useState(70);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  const playSong = (song: Song) => {
+  const playSong = async (song: Song) => {
     // 이전 오디오 정리
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current = null;
     }
 
-    // 새 오디오 생성
-    const audio = new Audio(song.previewUrl);
-    audio.volume = volume / 100;
+    try {
+      // YouTube Music API를 사용하는 경우
+      if (song.videoId) {
+        const streamUrl = await getSongStreamUrl(song.videoId as string);
+        if (!streamUrl) {
+          console.error('스트리밍 URL을 가져올 수 없습니다.');
+          return;
+        }
 
-    // 이벤트 리스너
-    audio.addEventListener('loadedmetadata', () => {
-      setDuration(audio.duration);
-    });
+        // 새 오디오 생성
+        const audio = new Audio(streamUrl);
+        audio.volume = volume / 100;
 
-    audio.addEventListener('timeupdate', () => {
-      setCurrentTime(audio.currentTime);
-    });
+        // 이벤트 리스너
+        audio.addEventListener('loadedmetadata', () => {
+          setDuration(audio.duration);
+        });
 
-    audio.addEventListener('ended', () => {
-      setIsPlaying(false);
-      setCurrentTime(0);
-    });
+        audio.addEventListener('timeupdate', () => {
+          setCurrentTime(audio.currentTime);
+        });
 
-    audio.addEventListener('error', (e) => {
-      console.error('재생 오류:', e);
-      setIsPlaying(false);
-    });
+        audio.addEventListener('ended', () => {
+          setIsPlaying(false);
+          setCurrentTime(0);
+        });
 
-    audioRef.current = audio;
-    setCurrentSong(song);
-    setIsPlaying(true);
-    
-    audio.play().catch((error) => {
+        audio.addEventListener('error', (e) => {
+          console.error('재생 오류:', e);
+          setIsPlaying(false);
+        });
+
+        audioRef.current = audio;
+        setCurrentSong(song);
+        setIsPlaying(true);
+        
+        await audio.play();
+      } 
+      // Spotify preview URL을 사용하는 경우 (폴백)
+      else if (song.previewUrl) {
+        const audio = new Audio(song.previewUrl);
+        audio.volume = volume / 100;
+
+        audio.addEventListener('loadedmetadata', () => {
+          setDuration(audio.duration);
+        });
+
+        audio.addEventListener('timeupdate', () => {
+          setCurrentTime(audio.currentTime);
+        });
+
+        audio.addEventListener('ended', () => {
+          setIsPlaying(false);
+          setCurrentTime(0);
+        });
+
+        audio.addEventListener('error', (e) => {
+          console.error('재생 오류:', e);
+          setIsPlaying(false);
+        });
+
+        audioRef.current = audio;
+        setCurrentSong(song);
+        setIsPlaying(true);
+        
+        await audio.play();
+      }
+    } catch (error) {
       console.error('재생 실패:', error);
       setIsPlaying(false);
-    });
+    }
   };
 
   const togglePlay = () => {

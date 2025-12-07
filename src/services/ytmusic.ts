@@ -1,0 +1,109 @@
+import type { Song, Playlist } from '../types/music';
+
+const YTMUSIC_API_URL = import.meta.env.VITE_YTMUSIC_API_URL || 'http://localhost:8000';
+
+/**
+ * YouTube Music API 호출 헬퍼 함수
+ */
+async function ytmusicFetch(endpoint: string): Promise<any> {
+  const response = await fetch(`${YTMUSIC_API_URL}${endpoint}`);
+  
+  if (!response.ok) {
+    throw new Error(`API error: ${response.status}`);
+  }
+  
+  const data = await response.json();
+  return data;
+}
+
+/**
+ * 음악 검색
+ */
+export async function searchMusic(query: string): Promise<Song[]> {
+  try {
+    const data = await ytmusicFetch(`/api/search?q=${encodeURIComponent(query)}&limit=20`);
+    return data.results || [];
+  } catch (error) {
+    console.error('Search error:', error);
+    return [];
+  }
+}
+
+/**
+ * 인기 차트 가져오기
+ */
+export async function getTrendingMusic(): Promise<Song[]> {
+  try {
+    const data = await ytmusicFetch('/api/charts?limit=20');
+    return data.results || [];
+  } catch (error) {
+    console.error('Trending music error:', error);
+    return [];
+  }
+}
+
+/**
+ * 추천 플레이리스트 가져오기
+ */
+export async function getFeaturedPlaylists(): Promise<Playlist[]> {
+  try {
+    const data = await ytmusicFetch('/api/playlists/featured?limit=10');
+    return data.results || [];
+  } catch (error) {
+    console.error('Featured playlists error:', error);
+    return [];
+  }
+}
+
+/**
+ * 플레이리스트 트랙 가져오기
+ */
+export async function getPlaylistTracks(playlistId: string): Promise<Song[]> {
+  try {
+    const data = await ytmusicFetch(`/api/playlists/${playlistId}?limit=50`);
+    return data.tracks || [];
+  } catch (error) {
+    console.error('Playlist tracks error:', error);
+    return [];
+  }
+}
+
+/**
+ * 노래 스트리밍 URL 가져오기
+ */
+export async function getSongStreamUrl(videoId: string): Promise<string | null> {
+  try {
+    const data = await ytmusicFetch(`/api/songs/${videoId}`);
+    return data.streamUrl || null;
+  } catch (error) {
+    console.error('Stream URL error:', error);
+    return null;
+  }
+}
+
+/**
+ * 초를 시간 형식으로 변환
+ */
+export function formatDuration(seconds: number | string): string {
+  const sec = typeof seconds === 'string' ? parseInt(seconds) : seconds;
+  const mins = Math.floor(sec / 60);
+  const secs = sec % 60;
+  return `${mins}:${secs.toString().padStart(2, '0')}`;
+}
+
+/**
+ * 오디오 재생 (YouTube Music 스트리밍)
+ */
+export async function playAudio(videoId: string): Promise<HTMLAudioElement | null> {
+  try {
+    const streamUrl = await getSongStreamUrl(videoId);
+    if (!streamUrl) return null;
+    
+    const audio = new Audio(streamUrl);
+    await audio.play();
+    return audio;
+  } catch (error) {
+    console.error('Play audio error:', error);
+    return null;
+  }
+}

@@ -7,6 +7,7 @@ export interface Song {
   duration: string;
   previewUrl?: string; // Spotify 미리듣기 URL
   spotifyUrl?: string; // Spotify 링크
+  videoId?: string; // YouTube Music video ID
 }
 
 export interface Playlist {
