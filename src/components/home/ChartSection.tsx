@@ -3,7 +3,7 @@ import type { Song } from '../../types/music';
 
 interface ChartSectionProps {
   songs: Song[];
-  onSongClick?: (song: Song) => void;
+  onSongClick?: (song: Song, songList: Song[]) => void;
 }
 
 export default function ChartSection({ songs, onSongClick }: ChartSectionProps) {
@@ -17,7 +17,7 @@ export default function ChartSection({ songs, onSongClick }: ChartSectionProps) 
               key={song.id}
               song={song}
               index={index}
-              onClick={() => onSongClick?.(song)}
+              onClick={() => onSongClick?.(song, songs)}
             />
           ))}
         </div>

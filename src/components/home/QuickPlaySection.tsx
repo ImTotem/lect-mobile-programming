@@ -3,7 +3,7 @@ import type { Song } from '../../types/music';
 
 interface QuickPlaySectionProps {
   songs: Song[];
-  onSongClick?: (song: Song) => void;
+  onSongClick?: (song: Song, songList: Song[]) => void;
 }
 
 export default function QuickPlaySection({
@@ -18,7 +18,7 @@ export default function QuickPlaySection({
           <QuickPlayCard
             key={song.id}
             song={song}
-            onClick={() => onSongClick?.(song)}
+            onClick={() => onSongClick?.(song, songs)}
           />
         ))}
       </div>

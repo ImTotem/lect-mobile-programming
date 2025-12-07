@@ -15,7 +15,7 @@ export default function HomePage({ isSidebarOpen }: HomePageProps) {
   const [trendingSongs, setTrendingSongs] = useState<Song[]>([]);
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const { playSong } = usePlayer();
+  const { playQueue } = usePlayer();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -37,8 +37,11 @@ export default function HomePage({ isSidebarOpen }: HomePageProps) {
     fetchData();
   }, []);
 
-  const handleSongClick = (song: Song) => {
-    playSong(song);
+  const handleSongClick = (song: Song, songList: Song[]) => {
+    // 클릭한 곡의 인덱스 찾기
+    const index = songList.findIndex((s) => s.id === song.id);
+    // 전체 리스트를 큐에 추가하고 클릭한 곡부터 재생
+    playQueue(songList, index >= 0 ? index : 0);
   };
 
   const handlePlaylistClick = (playlist: Playlist) => {
@@ -49,9 +52,8 @@ export default function HomePage({ isSidebarOpen }: HomePageProps) {
   if (isLoading) {
     return (
       <div
-        className={`min-h-screen bg-gradient-to-b from-gray-50 via-white to-gray-50 text-gray-900 pt-16 pb-28 transition-all duration-300 ${
-          isSidebarOpen ? 'pl-0 lg:pl-64 2xl:pl-20' : 'pl-0 lg:pl-20'
-        }`}
+        className={`min-h-screen bg-gradient-to-b from-gray-50 via-white to-gray-50 text-gray-900 pt-16 pb-28 transition-all duration-300 ${isSidebarOpen ? 'pl-0 lg:pl-64 2xl:pl-20' : 'pl-0 lg:pl-20'
+          }`}
       >
         <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex items-center justify-center h-96">
@@ -67,9 +69,8 @@ export default function HomePage({ isSidebarOpen }: HomePageProps) {
 
   return (
     <div
-      className={`min-h-screen bg-gradient-to-b from-gray-50 via-white to-gray-50 text-gray-900 pt-16 pb-28 transition-all duration-300 ${
-        isSidebarOpen ? 'pl-0 lg:pl-64 2xl:pl-20' : 'pl-0 lg:pl-20'
-      }`}
+      className={`min-h-screen bg-gradient-to-b from-gray-50 via-white to-gray-50 text-gray-900 pt-16 pb-28 transition-all duration-300 ${isSidebarOpen ? 'pl-0 lg:pl-64 2xl:pl-20' : 'pl-0 lg:pl-20'
+        }`}
     >
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <HeroSection

@@ -33,8 +33,9 @@ export default function PlayerControls({
   onRepeatToggle,
 }: PlayerControlsProps) {
   const formatTime = (seconds: number) => {
+    if (!seconds || isNaN(seconds)) return '0:00';
     const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
+    const secs = Math.floor(seconds % 60);
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
@@ -43,9 +44,8 @@ export default function PlayerControls({
       {/* Shuffle */}
       <button onClick={onShuffleToggle} className="hidden md:block">
         <FiShuffle
-          className={`w-4 h-4 transition-colors ${
-            isShuffle ? 'text-red-500' : 'text-gray-600 hover:text-gray-900'
-          }`}
+          className={`w-4 h-4 transition-colors ${isShuffle ? 'text-red-500' : 'text-gray-600 hover:text-gray-900'
+            }`}
         />
       </button>
 
@@ -80,11 +80,10 @@ export default function PlayerControls({
       {/* Repeat */}
       <button onClick={onRepeatToggle} className="hidden md:block relative">
         <FiRepeat
-          className={`w-4 h-4 transition-colors ${
-            repeatMode !== 'off'
+          className={`w-4 h-4 transition-colors ${repeatMode !== 'off'
               ? 'text-red-500'
               : 'text-gray-600 hover:text-gray-900'
-          }`}
+            }`}
         />
         {repeatMode === 'one' && (
           <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full text-[8px] text-white flex items-center justify-center">

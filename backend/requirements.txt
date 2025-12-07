@@ -3,3 +3,4 @@ uvicorn[standard]
 ytmusicapi
 python-dotenv
 pydantic
+yt-dlp

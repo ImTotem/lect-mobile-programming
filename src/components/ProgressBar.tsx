@@ -14,7 +14,7 @@ export default function ProgressBar({
   return (
     <div className="relative w-full h-1 bg-gray-200">
       <div
-        className="absolute top-0 left-0 h-full bg-red-500 transition-all"
+        className="absolute top-0 left-0 h-full bg-red-500"
         style={{ width: `${progress}%` }}
       />
       <input
@@ -27,7 +27,7 @@ export default function ProgressBar({
       />
       {/* Thumb */}
       <div
-        className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-red-500 rounded-full shadow-md pointer-events-none transition-all"
+        className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-red-500 rounded-full shadow-md pointer-events-none"
         style={{ left: `calc(${progress}% - 6px)` }}
       />
     </div>

@@ -233,37 +233,80 @@ async def get_playlist(
 @app.get("/api/songs/{video_id}")
 async def get_song(video_id: str):
     try:
-        song = ytmusic.get_song(video_id)
-        
-        streaming_data = song.get("streamingData", {})
-        
         audio_url = None
-        if streaming_data.get("adaptiveFormats"):
-            audio_formats = [
-                fmt for fmt in streaming_data["adaptiveFormats"]
-                if fmt.get("mimeType", "").startswith("audio/")
-            ]
-            if audio_formats:
-                best_audio = max(audio_formats, key=lambda x: x.get("bitrate", 0))
-                audio_url = best_audio.get("url")
-        
-        video_details = song.get("videoDetails", {})
-        
+        title = ""
+        artist = "Unknown Artist"
         thumbnail = ""
-        if video_details.get("thumbnail", {}).get("thumbnails"):
-            thumbnail = video_details["thumbnail"]["thumbnails"][-1]["url"]
+        duration = "0"
+        
+        # 1. yt-dlp로 스트리밍 URL 추출 (signatureCipher 자동 해결)
+        try:
+            import yt_dlp
+            
+            ydl_opts = {
+                'format': 'bestaudio/best',
+                'quiet': True,
+                'no_warnings': True,
+                'noplaylist': True,
+                'extract_flat': False,
+                # 캐싱 옵션 추가 (성능 향상)
+                'cachedir': '/tmp/yt-dlp-cache',
+                'age_limit': None,
+                'nocheckcertificate': True,
+            }
+            
+            youtube_url = f"https://music.youtube.com/watch?v={video_id}"
+            
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                info = ydl.extract_info(youtube_url, download=False)
+                
+                if info:
+                    audio_url = info.get('url')
+                    title = info.get('title', '')
+                    # yt-dlp에서 가져온 정보 사용
+                    if info.get('thumbnail'):
+                        thumbnail = info['thumbnail']
+                    if info.get('duration'):
+                        duration = str(int(info['duration']))
+                    if info.get('uploader'):
+                        artist = info['uploader']
+                        
+        except Exception as e:
+            print(f"yt-dlp error: {e}")
+            audio_url = None
+        
+        # 2. ytmusicapi로 메타데이터 보완 (yt-dlp가 실패하거나 메타데이터가 부족한 경우)
+        try:
+            song = ytmusic.get_song(video_id)
+            video_details = song.get("videoDetails", {})
+            
+            # yt-dlp에서 가져오지 못한 정보만 보완
+            if not title:
+                title = video_details.get("title", "")
+            if artist == "Unknown Artist":
+                artist = video_details.get("author", "Unknown Artist")
+            if not thumbnail and video_details.get("thumbnail", {}).get("thumbnails"):
+                thumbnails = video_details["thumbnail"]["thumbnails"]
+                if thumbnails:
+                    thumbnail = thumbnails[-1]["url"]
+            if duration == "0":
+                duration = video_details.get("lengthSeconds", "0")
+                
+        except Exception as meta_error:
+            print(f"ytmusicapi metadata error: {meta_error}")
         
         return {
             "id": video_id,
-            "title": video_details.get("title", ""),
-            "artist": video_details.get("author", "Unknown Artist"),
+            "title": title,
+            "artist": artist,
             "thumbnail": thumbnail,
-            "duration": video_details.get("lengthSeconds", "0"),
-            "streamUrl": audio_url,
+            "duration": duration,
+            "streamUrl": audio_url,  # yt-dlp가 서명 해결한 URL
             "videoId": video_id
         }
     
     except Exception as e:
+        traceback.print_exception(e)
         raise HTTPException(status_code=500, detail=f"노래 정보 조회 중 오류 발생: {str(e)}")
 
 
