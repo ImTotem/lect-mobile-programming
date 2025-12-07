@@ -7,11 +7,11 @@ const YTMUSIC_API_URL = import.meta.env.VITE_YTMUSIC_API_URL || 'http://localhos
  */
 async function ytmusicFetch(endpoint: string): Promise<any> {
   const response = await fetch(`${YTMUSIC_API_URL}${endpoint}`);
-  
+
   if (!response.ok) {
     throw new Error(`API error: ${response.status}`);
   }
-  
+
   const data = await response.json();
   return data;
 }
@@ -58,7 +58,7 @@ export async function getFeaturedPlaylists(): Promise<Playlist[]> {
 /**
  * 플레이리스트 트랙 가져오기
  */
-export async function getPlaylistTracks(playlistId: string): Promise<Song[]> {
+export async function getPlaylistTracks(playlistId: string | number): Promise<Song[]> {
   try {
     const data = await ytmusicFetch(`/api/playlists/${playlistId}?limit=50`);
     return data.tracks || [];
@@ -82,6 +82,19 @@ export async function getSongStreamUrl(videoId: string): Promise<string | null> 
 }
 
 /**
+ * 곡 전체 정보 가져오기 (lyricsBrowseId 포함)
+ */
+export async function getSongInfo(videoId: string): Promise<any> {
+  try {
+    const data = await ytmusicFetch(`/api/songs/${videoId}`);
+    return data;
+  } catch (error) {
+    console.error('Song info error:', error);
+    return null;
+  }
+}
+
+/**
  * 초를 시간 형식으로 변환
  */
 export function formatDuration(seconds: number | string): string {
@@ -98,7 +111,7 @@ export async function playAudio(videoId: string): Promise<HTMLAudioElement | nul
   try {
     const streamUrl = await getSongStreamUrl(videoId);
     if (!streamUrl) return null;
-    
+
     const audio = new Audio(streamUrl);
     await audio.play();
     return audio;

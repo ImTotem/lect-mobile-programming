@@ -8,7 +8,7 @@ import {
 } from 'react';
 import type { ReactNode } from 'react';
 import type { Song } from '../types/music';
-import { getSongStreamUrl } from '../services/ytmusic';
+import { getSongStreamUrl, getSongInfo } from '../services/ytmusic';
 import { useAudioPlayer, useQueueManagement } from '../hooks';
 import { getStorageItem, setStorageItem } from '../utils';
 import { STORAGE_KEYS, PLAYER_DEFAULTS } from '../constants';
@@ -137,18 +137,28 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       let streamUrl: string | null = null;
 
       if (nextSong.videoId) {
-        streamUrl = await getSongStreamUrl(nextSong.videoId as string);
+        // 전체 곡 정보 가져오기 (lyricsBrowseId 포함)
+        const songInfo = await getSongInfo(nextSong.videoId as string);
 
         // 요청이 취소되었는지 확인
         if (abortController.signal.aborted) {
           return;
         }
 
-        if (!streamUrl) {
+        if (!songInfo || !songInfo.streamUrl) {
           console.error('스트리밍 URL을 가져올 수 없습니다.');
           setIsLoading(false);
           return;
         }
+
+        streamUrl = songInfo.streamUrl;
+
+        // lyricsBrowseId를 currentSong에 업데이트
+        const updatedSong = {
+          ...nextSong,
+          lyricsBrowseId: songInfo.lyricsBrowseId
+        };
+        setCurrentSong(updatedSong);
       } else {
         console.error('재생 가능한 URL이 없습니다.');
         setIsLoading(false);
@@ -161,7 +171,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       }
 
       // 오디오 로딩 및 재생
-      const audio = createAudio(streamUrl, getAudioHandlers());
+      const audio = createAudio(streamUrl!, getAudioHandlers());
       audioRef.current = audio;
       setIsLoading(false);
       setIsPlaying(true);
@@ -241,12 +251,28 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
 
       // YouTube Music API를 사용하는 경우
       if (song.videoId) {
-        streamUrl = await getSongStreamUrl(song.videoId as string);
-        if (!streamUrl) {
+        // 전체 곡 정보 가져오기 (lyricsBrowseId 포함)
+        const songInfo = await getSongInfo(song.videoId as string);
+
+        if (!songInfo || !songInfo.streamUrl) {
           console.error('스트리밍 URL을 가져올 수 없습니다.');
           alert('이 곡은 현재 재생할 수 없습니다. 다른 곡을 선택해주세요.');
           setIsLoading(false);
           return;
+        }
+
+        streamUrl = songInfo.streamUrl;
+
+        // lyricsBrowseId를 currentSong에 업데이트
+        const updatedSong = {
+          ...song,
+          lyricsBrowseId: songInfo.lyricsBrowseId
+        };
+        setCurrentSong(updatedSong);
+
+        // 큐에 추가할 때도 업데이트된 정보 사용
+        if (addToQueue) {
+          addSongToQueue(updatedSong);
         }
       } else {
         console.error('재생 가능한 URL이 없습니다.');
@@ -256,15 +282,10 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       }
 
       // 새 오디오 생성
-      const audio = createAudio(streamUrl, getAudioHandlers());
+      const audio = createAudio(streamUrl!, getAudioHandlers());
       audioRef.current = audio;
       setIsLoading(false);
       setIsPlaying(true);
-
-      // 큐에 추가
-      if (addToQueue) {
-        addSongToQueue(song);
-      }
 
       await audio.play();
     } catch (error) {
@@ -277,6 +298,15 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
 
   const playQueue = async (songs: Song[], startIndex = 0) => {
     if (songs.length === 0) return;
+
+    // 이전 로딩 취소
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    // 새 AbortController 생성
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
 
     setQueueWithIndex(songs, startIndex);
     const song = songs[startIndex];
@@ -292,13 +322,29 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       let streamUrl: string | null = null;
 
       if (song.videoId) {
-        streamUrl = await getSongStreamUrl(song.videoId as string);
-        if (!streamUrl) {
+        // 전체 곡 정보 가져오기 (lyricsBrowseId 포함)
+        const songInfo = await getSongInfo(song.videoId as string);
+
+        // 취소 확인
+        if (abortController.signal.aborted) {
+          return;
+        }
+
+        if (!songInfo || !songInfo.streamUrl) {
           console.error('스트리밍 URL을 가져올 수 없습니다.');
           alert('이 곡은 현재 재생할 수 없습니다.');
           setIsLoading(false);
           return;
         }
+
+        streamUrl = songInfo.streamUrl;
+
+        // lyricsBrowseId를 currentSong에 업데이트
+        const updatedSong = {
+          ...song,
+          lyricsBrowseId: songInfo.lyricsBrowseId
+        };
+        setCurrentSong(updatedSong);
       } else {
         console.error('재생 가능한 URL이 없습니다.');
         alert('이 곡은 현재 재생할 수 없습니다.');
@@ -306,13 +352,22 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      const audio = createAudio(streamUrl, getAudioHandlers());
+      // 다시 한번 취소 확인
+      if (abortController.signal.aborted) {
+        return;
+      }
+
+      const audio = createAudio(streamUrl!, getAudioHandlers());
       audioRef.current = audio;
       setIsLoading(false);
       setIsPlaying(true);
 
       await audio.play();
     } catch (error) {
+      // AbortError는 무시
+      if (abortController.signal.aborted) {
+        return;
+      }
       console.error('큐 재생 실패:', error);
       setIsLoading(false);
       setIsPlaying(false);
@@ -378,18 +433,28 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       let streamUrl: string | null = null;
 
       if (prevSong.videoId) {
-        streamUrl = await getSongStreamUrl(prevSong.videoId as string);
+        // 전체 곡 정보 가져오기 (lyricsBrowseId 포함)
+        const songInfo = await getSongInfo(prevSong.videoId as string);
 
         // 요청이 취소되었는지 확인
         if (abortController.signal.aborted) {
           return;
         }
 
-        if (!streamUrl) {
+        if (!songInfo || !songInfo.streamUrl) {
           console.error('스트리밍 URL을 가져올 수 없습니다.');
           setIsLoading(false);
           return;
         }
+
+        streamUrl = songInfo.streamUrl;
+
+        // lyricsBrowseId를 currentSong에 업데이트
+        const updatedSong = {
+          ...prevSong,
+          lyricsBrowseId: songInfo.lyricsBrowseId
+        };
+        setCurrentSong(updatedSong);
       } else {
         console.error('재생 가능한 URL이 없습니다.');
         setIsLoading(false);
@@ -401,7 +466,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      const audio = createAudio(streamUrl, getAudioHandlers());
+      const audio = createAudio(streamUrl!, getAudioHandlers());
       audioRef.current = audio;
       setIsLoading(false);
       setIsPlaying(true);

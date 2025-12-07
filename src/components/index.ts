@@ -1,6 +1,8 @@
 export { default as Header } from './Header';
 export { default as Sidebar } from './Sidebar';
 export { default as PlayerBar } from './PlayerBar';
+export { default as QueueView } from './QueueView';
+export { default as LyricsView } from './LyricsView';
 export { default as SearchBar } from './SearchBar';
 export { default as Logo } from './Logo';
 export { default as NavItem } from './NavItem';

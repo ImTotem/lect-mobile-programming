@@ -4,7 +4,7 @@ import QuickPlaySection from '../components/home/QuickPlaySection';
 import PlaylistSection from '../components/home/PlaylistSection';
 import ChartSection from '../components/home/ChartSection';
 import { PageLayout, SkeletonLoader } from '../components';
-import { getTrendingMusic, getFeaturedPlaylists } from '../services';
+import { getTrendingMusic, getFeaturedPlaylists, getPlaylistTracks } from '../services';
 import { usePlayer } from '../contexts';
 import type { Song, Playlist } from '../types/music';
 
@@ -45,9 +45,20 @@ export default function HomePage({ isSidebarOpen }: HomePageProps) {
     playQueue(songList, index >= 0 ? index : 0);
   };
 
-  const handlePlaylistClick = (playlist: Playlist) => {
-    console.log('Playlist clicked:', playlist);
-    // TODO: 플레이리스트 상세 페이지로 이동
+  const handlePlaylistClick = async (playlist: Playlist) => {
+    try {
+      // 플레이리스트 트랙 가져오기
+      const tracks = await getPlaylistTracks(playlist.id);
+
+      if (tracks.length > 0) {
+        // 첫 번째 트랙부터 재생
+        playQueue(tracks, 0);
+      } else {
+        console.warn('No tracks found in playlist:', playlist.title);
+      }
+    } catch (error) {
+      console.error('Failed to play playlist:', error);
+    }
   };
 
   if (isLoading) {

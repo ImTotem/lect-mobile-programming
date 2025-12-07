@@ -1,12 +1,14 @@
+import { useState } from 'react';
 import { useLocalStorage } from './hooks';
 import { PlayerProvider } from './contexts';
-import { Header, Sidebar, PlayerBar } from './components';
+import { Header, Sidebar, PlayerBar, QueueView } from './components';
 import HomePage from './pages/HomePage';
 import ExplorePage from './pages/ExplorePage';
 
 function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useLocalStorage('sidebar-open', true);
   const [currentPage, setCurrentPage] = useLocalStorage<'home' | 'explore' | 'library' | 'recent'>('current-page', 'home');
+  const [isQueueViewOpen, setIsQueueViewOpen] = useState(false);
 
   const toggleSidebar = () => {
     setIsSidebarOpen((prev) => !prev);
@@ -50,7 +52,13 @@ function App() {
   return (
     <PlayerProvider>
       <div className="min-h-screen bg-white">
-        <Header onMenuClick={toggleSidebar} />
+        <Header
+          onMenuClick={toggleSidebar}
+          onLogoClick={() => {
+            setCurrentPage('home');
+            setIsQueueViewOpen(false);
+          }}
+        />
         <Sidebar
           isOpen={isSidebarOpen}
           onClose={() => setIsSidebarOpen(false)}
@@ -58,7 +66,11 @@ function App() {
           onNavigate={handleNavigate}
         />
         {renderPage()}
-        <PlayerBar />
+        <PlayerBar onExpand={() => setIsQueueViewOpen(!isQueueViewOpen)} />
+        <QueueView
+          isOpen={isQueueViewOpen}
+          onClose={() => setIsQueueViewOpen(false)}
+        />
       </div>
     </PlayerProvider>
   );

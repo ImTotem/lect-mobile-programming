@@ -2,11 +2,16 @@ import { FiMenu } from 'react-icons/fi';
 
 interface LogoProps {
   onMenuClick: () => void;
+  onLogoClick?: () => void;
 }
 
-export default function Logo({ onMenuClick }: LogoProps) {
+export default function Logo({ onMenuClick, onLogoClick }: LogoProps) {
   const handleLogoClick = () => {
-    window.location.href = '/';
+    if (onLogoClick) {
+      onLogoClick();
+    } else {
+      window.location.href = '/';
+    }
   };
 
   return (

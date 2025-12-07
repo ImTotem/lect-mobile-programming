@@ -269,6 +269,7 @@ async def get_song(video_id: str):
                 artist = cached.get('artist', 'Unknown Artist')
                 thumbnail = cached.get('thumbnail', '')
                 duration = cached.get('duration', '0')
+                lyrics_browse_id = cached.get('lyricsBrowseId')
                 print(f"Cache hit for {video_id}")
             else:
                 # 만료된 캐시 삭제
@@ -293,7 +294,7 @@ async def get_song(video_id: str):
                     if info.get('uploader'):
                         artist = info['uploader']
                     
-                    # 캐시에 저장 (5시간 유효)
+                    # 캐시에 저장 (5시간 유효) - lyrics_browse_id는 나중에 추가
                     if audio_url:
                         url_cache[video_id] = {
                             'url': audio_url,
@@ -301,6 +302,7 @@ async def get_song(video_id: str):
                             'artist': artist,
                             'thumbnail': thumbnail,
                             'duration': duration,
+                            'lyricsBrowseId': None,  # 나중에 업데이트
                             'expires_at': now + timedelta(hours=5)
                         }
                         print(f"Cached {video_id}")
@@ -310,6 +312,7 @@ async def get_song(video_id: str):
                 audio_url = None
         
         # 2. ytmusicapi로 메타데이터 보완 (yt-dlp가 실패하거나 메타데이터가 부족한 경우)
+        lyrics_browse_id = None
         try:
             song = ytmusic.get_song(video_id)
             video_details = song.get("videoDetails", {})
@@ -325,6 +328,18 @@ async def get_song(video_id: str):
                     thumbnail = thumbnails[-1]["url"]
             if duration == "0":
                 duration = video_details.get("lengthSeconds", "0")
+            
+            # 가사 browse ID 가져오기 - get_watch_playlist 사용
+            if lyrics_browse_id is None:  # 캐시에 없으면 가져오기
+                try:
+                    watch_playlist = ytmusic.get_watch_playlist(videoId=video_id)
+                    lyrics_browse_id = watch_playlist.get('lyrics')
+                    
+                    # 캐시에 lyrics_browse_id 업데이트
+                    if video_id in url_cache:
+                        url_cache[video_id]['lyricsBrowseId'] = lyrics_browse_id
+                except Exception as lyrics_error:
+                    print(f"Failed to get lyrics browse ID: {lyrics_error}")
                 
         except Exception as meta_error:
             print(f"ytmusicapi metadata error: {meta_error}")
@@ -336,12 +351,81 @@ async def get_song(video_id: str):
             "thumbnail": thumbnail,
             "duration": duration,
             "streamUrl": audio_url,  # yt-dlp가 서명 해결한 URL
-            "videoId": video_id
+            "videoId": video_id,
+            "lyricsBrowseId": lyrics_browse_id  # 가사 browse ID 추가
         }
+
     
     except Exception as e:
-        traceback.print_exception(e)
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"노래 정보 조회 중 오류 발생: {str(e)}")
+
+
+@app.get("/api/lyrics/{browse_id}")
+async def get_lyrics(browse_id: str):
+    """
+    Get lyrics for a song by browse ID
+    browse_id should be the lyrics browse ID from the song metadata
+    """
+    try:
+        # Fetch lyrics directly
+        lyrics_data = ytmusic.get_lyrics(browse_id)
+        
+        if not lyrics_data:
+            return {
+                "lyrics": None,
+                "hasTimestamps": False,
+                "source": None,
+                "error": "가사를 찾을 수 없습니다"
+            }
+        
+        # Convert LyricLine objects to dictionaries if present
+        lyrics_lines = lyrics_data.get('lyrics', [])
+        
+        # Detect if lyrics have timestamps by checking the first line
+        has_timestamps = False
+        if isinstance(lyrics_lines, list) and len(lyrics_lines) > 0:
+            first_line = lyrics_lines[0]
+            # Check if the first line has start_time attribute
+            if hasattr(first_line, 'start_time') and first_line.start_time is not None:
+                has_timestamps = True
+        
+        # If lyrics is a list of LyricLine objects, convert to dict
+        if isinstance(lyrics_lines, list) and len(lyrics_lines) > 0:
+            lyrics_formatted = [
+                {
+                    "text": line.text if hasattr(line, 'text') else str(line),
+                    "startTime": line.start_time if hasattr(line, 'start_time') else None,
+                    "endTime": line.end_time if hasattr(line, 'end_time') else None,
+                    "id": line.id if hasattr(line, 'id') else None
+                }
+                for line in lyrics_lines
+            ]
+        elif isinstance(lyrics_lines, str):
+            # Plain text lyrics
+            lyrics_formatted = lyrics_lines
+            has_timestamps = False
+        else:
+            lyrics_formatted = None
+        
+        print(f"Lyrics for {browse_id}: hasTimestamps={has_timestamps}, lines={len(lyrics_lines) if isinstance(lyrics_lines, list) else 'N/A'}")
+        
+        return {
+            "lyrics": lyrics_formatted,
+            "hasTimestamps": has_timestamps,
+            "source": lyrics_data.get('source'),
+            "error": None
+        }
+    except Exception as e:
+        print(f"Error fetching lyrics for {browse_id}: {str(e)}")
+        traceback.print_exc()
+        return {
+            "lyrics": None,
+            "hasTimestamps": False,
+            "source": None,
+            "error": f"가사를 가져오는 중 오류가 발생했습니다: {str(e)}"
+        }
+
 
 
 if __name__ == "__main__":
