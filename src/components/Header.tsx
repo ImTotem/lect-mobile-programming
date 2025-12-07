@@ -6,6 +6,7 @@ interface HeaderProps {
   onMenuClick: () => void;
   onLogoClick?: () => void;
   onNavigate: (page: any) => void;
+  isSidebarOpen: boolean;
   user?: {
     name: string;
     email: string;
@@ -13,7 +14,7 @@ interface HeaderProps {
   };
 }
 
-export default function Header({ onMenuClick, onLogoClick, onNavigate, user }: HeaderProps) {
+export default function Header({ onMenuClick, onLogoClick, onNavigate, isSidebarOpen, user }: HeaderProps) {
   const handleSearch = (query: string) => {
     console.log('Searching for:', query);
     onNavigate({ type: 'search', query });
