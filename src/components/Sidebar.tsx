@@ -41,13 +41,12 @@ export default function Sidebar({ isOpen, onClose, currentPage, onNavigate }: Si
 
       {/* Sidebar */}
       <aside
-        className={`fixed left-0 top-16 bottom-20 z-40 bg-white/95 backdrop-blur-sm border-r border-gray-200 transition-all duration-300 overflow-hidden ${
-          isOpen
+        className={`fixed left-0 top-16 bottom-20 z-40 bg-white/95 backdrop-blur-sm border-r border-gray-200 transition-all duration-300 overflow-hidden ${isOpen
             ? 'w-64 translate-x-0'
             : 'w-0 -translate-x-full lg:w-20 lg:translate-x-0'
-        }`}
+          }`}
       >
-        <div className={`flex flex-col h-full ${isOpen ? 'w-64' : 'w-20'}`}>
+        <div className="flex flex-col h-full w-full">
           {/* Close Button (모바일에서만) */}
           {isOpen && (
             <div className="flex justify-end p-4 lg:hidden">
