@@ -1,29 +1,29 @@
 import { useState, useCallback, useEffect } from 'react';
 import type { Song } from '../types/music';
+import { getStorageItem, setStorageItem } from '../utils';
+import { STORAGE_KEYS, PLAYER_DEFAULTS } from '../constants';
 
 /**
  * 재생 큐 관리를 담당하는 hook
  */
 export function useQueueManagement() {
     // localStorage에서 큐와 인덱스 불러오기
-    const [queue, setQueue] = useState<Song[]>(() => {
-        const savedQueue = localStorage.getItem('playerQueue');
-        return savedQueue ? JSON.parse(savedQueue) : [];
-    });
+    const [queue, setQueue] = useState<Song[]>(() =>
+        getStorageItem<Song[]>(STORAGE_KEYS.PLAYER_QUEUE, [])
+    );
 
-    const [currentIndex, setCurrentIndex] = useState(() => {
-        const savedIndex = localStorage.getItem('playerCurrentIndex');
-        return savedIndex ? parseInt(savedIndex, 10) : 0;
-    });
+    const [currentIndex, setCurrentIndex] = useState(() =>
+        getStorageItem<number>(STORAGE_KEYS.PLAYER_CURRENT_INDEX, PLAYER_DEFAULTS.CURRENT_INDEX)
+    );
 
     // 큐가 변경될 때마다 localStorage에 저장
     useEffect(() => {
-        localStorage.setItem('playerQueue', JSON.stringify(queue));
+        setStorageItem(STORAGE_KEYS.PLAYER_QUEUE, queue);
     }, [queue]);
 
     // 인덱스가 변경될 때마다 localStorage에 저장
     useEffect(() => {
-        localStorage.setItem('playerCurrentIndex', currentIndex.toString());
+        setStorageItem(STORAGE_KEYS.PLAYER_CURRENT_INDEX, currentIndex);
     }, [currentIndex]);
 
     /**

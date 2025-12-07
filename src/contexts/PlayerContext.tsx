@@ -10,6 +10,8 @@ import type { ReactNode } from 'react';
 import type { Song } from '../types/music';
 import { getSongStreamUrl } from '../services/ytmusic';
 import { useAudioPlayer, useQueueManagement } from '../hooks';
+import { getStorageItem, setStorageItem } from '../utils';
+import { STORAGE_KEYS, PLAYER_DEFAULTS } from '../constants';
 
 interface PlayerContextType {
   currentSong: Song | null;
@@ -37,10 +39,9 @@ const PlayerContext = createContext<PlayerContextType | undefined>(undefined);
 
 export function PlayerProvider({ children }: { children: ReactNode }) {
   // localStorage에서 현재 곡 불러오기
-  const [currentSong, setCurrentSong] = useState<Song | null>(() => {
-    const savedSong = localStorage.getItem('playerCurrentSong');
-    return savedSong ? JSON.parse(savedSong) : null;
-  });
+  const [currentSong, setCurrentSong] = useState<Song | null>(() =>
+    getStorageItem<Song | null>(STORAGE_KEYS.PLAYER_CURRENT_SONG, null)
+  );
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -48,16 +49,14 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   const [duration, setDuration] = useState(0);
 
   // localStorage에서 반복 모드 불러오기
-  const [repeatMode, setRepeatMode] = useState<'off' | 'all' | 'one'>(() => {
-    const savedMode = localStorage.getItem('playerRepeatMode');
-    return (savedMode as 'off' | 'all' | 'one') || 'off';
-  });
+  const [repeatMode, setRepeatMode] = useState<'off' | 'all' | 'one'>(() =>
+    getStorageItem<'off' | 'all' | 'one'>(STORAGE_KEYS.PLAYER_REPEAT_MODE, PLAYER_DEFAULTS.REPEAT_MODE)
+  );
 
-  // localStorage에서 저장된 볼륨 불러오기 (기본값 50)
-  const [volume, setVolumeState] = useState(() => {
-    const savedVolume = localStorage.getItem('playerVolume');
-    return savedVolume ? parseInt(savedVolume, 10) : 50;
-  });
+  // localStorage에서 저장된 볼륨 불러오기
+  const [volume, setVolumeState] = useState(() =>
+    getStorageItem<number>(STORAGE_KEYS.PLAYER_VOLUME, PLAYER_DEFAULTS.VOLUME)
+  );
 
   // Custom hooks 사용
   const { audioRef, cleanupAudio, createAudio } = useAudioPlayer(volume);
@@ -89,13 +88,13 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   // currentSong이 변경될 때마다 localStorage에 저장
   useEffect(() => {
     if (currentSong) {
-      localStorage.setItem('playerCurrentSong', JSON.stringify(currentSong));
+      setStorageItem(STORAGE_KEYS.PLAYER_CURRENT_SONG, currentSong);
     }
   }, [currentSong]);
 
   // repeatMode가 변경될 때마다 localStorage에 저장
   useEffect(() => {
-    localStorage.setItem('playerRepeatMode', repeatMode);
+    setStorageItem(STORAGE_KEYS.PLAYER_REPEAT_MODE, repeatMode);
   }, [repeatMode]);
 
   // playNext 참조를 저장 (순환 참조 방지)

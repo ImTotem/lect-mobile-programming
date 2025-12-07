@@ -1,9 +1,6 @@
 import { useState } from 'react';
-import ProgressBar from './ProgressBar';
-import SongInfo from './SongInfo';
-import PlayerControls from './PlayerControls';
-import VolumeControl from './VolumeControl';
-import { usePlayer } from '../contexts';
+import { usePlayer } from '../contexts/PlayerContext';
+import { SongInfo, PlayerControls, ProgressBar, VolumeControl } from './index';
 
 export default function PlayerBar() {
   const {
