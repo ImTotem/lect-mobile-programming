@@ -3,7 +3,7 @@ import HeroSection from '../components/home/HeroSection';
 import QuickPlaySection from '../components/home/QuickPlaySection';
 import PlaylistSection from '../components/home/PlaylistSection';
 import ChartSection from '../components/home/ChartSection';
-import { PageLayout, LoadingSpinner } from '../components';
+import { PageLayout, SkeletonLoader } from '../components';
 import { getTrendingMusic, getFeaturedPlaylists } from '../services';
 import { usePlayer } from '../contexts';
 import type { Song, Playlist } from '../types/music';
@@ -53,7 +53,7 @@ export default function HomePage({ isSidebarOpen }: HomePageProps) {
   if (isLoading) {
     return (
       <PageLayout isSidebarOpen={isSidebarOpen}>
-        <LoadingSpinner message="음악을 불러오는 중..." />
+        <SkeletonLoader />
       </PageLayout>
     );
   }

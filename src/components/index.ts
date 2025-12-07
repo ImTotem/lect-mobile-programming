@@ -11,3 +11,4 @@ export { default as SongInfo } from './SongInfo';
 export { default as VolumeControl } from './VolumeControl';
 export { default as PageLayout } from './PageLayout';
 export { default as LoadingSpinner } from './LoadingSpinner';
+export { default as SkeletonLoader } from './SkeletonLoader';
