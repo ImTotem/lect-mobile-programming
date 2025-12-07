@@ -5,10 +5,12 @@ import {
   FiSkipForward,
   FiShuffle,
   FiRepeat,
+  FiLoader,
 } from 'react-icons/fi';
 
 interface PlayerControlsProps {
   isPlaying: boolean;
+  isLoading: boolean;
   isShuffle: boolean;
   repeatMode: 'off' | 'all' | 'one';
   currentTime: number;
@@ -22,6 +24,7 @@ interface PlayerControlsProps {
 
 export default function PlayerControls({
   isPlaying,
+  isLoading,
   isShuffle,
   repeatMode,
   currentTime,
@@ -61,8 +64,11 @@ export default function PlayerControls({
       <button
         onClick={onPlayPause}
         className="w-9 h-9 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center transition-colors shadow-md"
+        disabled={isLoading}
       >
-        {isPlaying ? (
+        {isLoading ? (
+          <FiLoader className="text-white w-4 h-4 animate-spin" />
+        ) : isPlaying ? (
           <FiPause className="text-white w-4 h-4" />
         ) : (
           <FiPlay className="text-white w-4 h-4 ml-0.5" />
@@ -81,8 +87,8 @@ export default function PlayerControls({
       <button onClick={onRepeatToggle} className="hidden md:block relative">
         <FiRepeat
           className={`w-4 h-4 transition-colors ${repeatMode !== 'off'
-              ? 'text-red-500'
-              : 'text-gray-600 hover:text-gray-900'
+            ? 'text-red-500'
+            : 'text-gray-600 hover:text-gray-900'
             }`}
         />
         {repeatMode === 'one' && (

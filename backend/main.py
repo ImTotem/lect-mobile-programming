@@ -1,9 +1,11 @@
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from ytmusicapi import YTMusic
+import yt_dlp
 import os
 import traceback
 from dotenv import load_dotenv
+from datetime import datetime, timedelta
 
 load_dotenv()
 
@@ -22,6 +24,23 @@ app.add_middleware(
 )
 
 ytmusic = YTMusic("browser.json", language="ko")
+
+# 전역 yt-dlp 인스턴스 (캐싱 성능 향상)
+ydl_opts = {
+    'format': 'bestaudio/best',
+    'quiet': True,
+    'no_warnings': True,
+    'noplaylist': True,
+    'extract_flat': False,
+    'cachedir': '/tmp/yt-dlp-cache',
+    'age_limit': None,
+    'nocheckcertificate': True,
+}
+ydl = yt_dlp.YoutubeDL(ydl_opts)
+
+# 스트리밍 URL 캐시 (video_id: {url, expires_at})
+# YouTube URL은 약 6시간 유효하므로 5시간 캐싱
+url_cache = {}
 
 
 @app.get("/")
@@ -239,25 +258,28 @@ async def get_song(video_id: str):
         thumbnail = ""
         duration = "0"
         
-        # 1. yt-dlp로 스트리밍 URL 추출 (signatureCipher 자동 해결)
-        try:
-            import yt_dlp
-            
-            ydl_opts = {
-                'format': 'bestaudio/best',
-                'quiet': True,
-                'no_warnings': True,
-                'noplaylist': True,
-                'extract_flat': False,
-                # 캐싱 옵션 추가 (성능 향상)
-                'cachedir': '/tmp/yt-dlp-cache',
-                'age_limit': None,
-                'nocheckcertificate': True,
-            }
-            
-            youtube_url = f"https://music.youtube.com/watch?v={video_id}"
-            
-            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        # 캐시 확인
+        now = datetime.now()
+        if video_id in url_cache:
+            cached = url_cache[video_id]
+            if cached['expires_at'] > now:
+                # 캐시된 URL 사용 (매우 빠름!)
+                audio_url = cached['url']
+                title = cached.get('title', '')
+                artist = cached.get('artist', 'Unknown Artist')
+                thumbnail = cached.get('thumbnail', '')
+                duration = cached.get('duration', '0')
+                print(f"Cache hit for {video_id}")
+            else:
+                # 만료된 캐시 삭제
+                del url_cache[video_id]
+        
+        # 캐시 미스 - yt-dlp로 추출
+        if not audio_url:
+            try:
+                youtube_url = f"https://music.youtube.com/watch?v={video_id}"
+                
+                # 전역 ydl 인스턴스 사용 (캐싱 활용)
                 info = ydl.extract_info(youtube_url, download=False)
                 
                 if info:
@@ -270,10 +292,22 @@ async def get_song(video_id: str):
                         duration = str(int(info['duration']))
                     if info.get('uploader'):
                         artist = info['uploader']
+                    
+                    # 캐시에 저장 (5시간 유효)
+                    if audio_url:
+                        url_cache[video_id] = {
+                            'url': audio_url,
+                            'title': title,
+                            'artist': artist,
+                            'thumbnail': thumbnail,
+                            'duration': duration,
+                            'expires_at': now + timedelta(hours=5)
+                        }
+                        print(f"Cached {video_id}")
                         
-        except Exception as e:
-            print(f"yt-dlp error: {e}")
-            audio_url = None
+            except Exception as e:
+                print(f"yt-dlp error: {e}")
+                audio_url = None
         
         # 2. ytmusicapi로 메타데이터 보완 (yt-dlp가 실패하거나 메타데이터가 부족한 경우)
         try:

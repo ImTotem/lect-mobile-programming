@@ -1,12 +1,30 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import type { Song } from '../types/music';
 
 /**
  * 재생 큐 관리를 담당하는 hook
  */
 export function useQueueManagement() {
-    const [queue, setQueue] = useState<Song[]>([]);
-    const [currentIndex, setCurrentIndex] = useState(0);
+    // localStorage에서 큐와 인덱스 불러오기
+    const [queue, setQueue] = useState<Song[]>(() => {
+        const savedQueue = localStorage.getItem('playerQueue');
+        return savedQueue ? JSON.parse(savedQueue) : [];
+    });
+
+    const [currentIndex, setCurrentIndex] = useState(() => {
+        const savedIndex = localStorage.getItem('playerCurrentIndex');
+        return savedIndex ? parseInt(savedIndex, 10) : 0;
+    });
+
+    // 큐가 변경될 때마다 localStorage에 저장
+    useEffect(() => {
+        localStorage.setItem('playerQueue', JSON.stringify(queue));
+    }, [queue]);
+
+    // 인덱스가 변경될 때마다 localStorage에 저장
+    useEffect(() => {
+        localStorage.setItem('playerCurrentIndex', currentIndex.toString());
+    }, [currentIndex]);
 
     /**
      * 큐에 곡 추가

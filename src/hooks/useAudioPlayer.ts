@@ -24,6 +24,13 @@ export function useAudioPlayer(volume: number) {
      */
     const cleanupAudio = useCallback(() => {
         if (audioRef.current) {
+            // 재생 중지
+            try {
+                audioRef.current.pause();
+            } catch (e) {
+                // 이미 정지된 경우 무시
+            }
+
             // 저장된 이벤트 리스너 제거
             if (handlersRef.current.loadedmetadata) {
                 audioRef.current.removeEventListener('loadedmetadata', handlersRef.current.loadedmetadata);
@@ -38,12 +45,23 @@ export function useAudioPlayer(volume: number) {
                 audioRef.current.removeEventListener('error', handlersRef.current.error);
             }
 
-            audioRef.current.pause();
+            // 오디오 소스 제거 및 리소스 해제
             audioRef.current.src = '';
-            audioRef.current.load(); // 리소스 해제
+            audioRef.current.load();
             audioRef.current = null;
         }
         handlersRef.current = {};
+
+        // 추가 안전장치: 페이지의 모든 audio 요소 정지
+        const allAudios = document.querySelectorAll('audio');
+        allAudios.forEach(audio => {
+            try {
+                audio.pause();
+                audio.src = '';
+            } catch (e) {
+                // 무시
+            }
+        });
     }, []);
 
     /**

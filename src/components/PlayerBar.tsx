@@ -9,23 +9,24 @@ export default function PlayerBar() {
   const {
     currentSong,
     isPlaying,
+    isLoading,
     currentTime,
     duration,
     volume,
+    repeatMode,
     togglePlay,
     setVolume,
     seek,
     playNext,
     playPrevious,
+    setRepeatMode,
   } = usePlayer();
 
   const [isShuffle, setIsShuffle] = useState(false);
-  const [repeatMode, setRepeatMode] = useState<'off' | 'all' | 'one'>('off');
-  const [isLiked, setIsLiked] = useState(false);
 
   const handleRepeatToggle = () => {
-    setRepeatMode((prev) =>
-      prev === 'off' ? 'all' : prev === 'all' ? 'one' : 'off'
+    setRepeatMode(
+      repeatMode === 'off' ? 'all' : repeatMode === 'all' ? 'one' : 'off'
     );
   };
 
@@ -40,8 +41,6 @@ export default function PlayerBar() {
               title={currentSong.title}
               artist={currentSong.artist}
               thumbnail={currentSong.thumbnail}
-              isLiked={isLiked}
-              onLikeToggle={() => setIsLiked(!isLiked)}
             />
           ) : (
             <div className="flex-1 min-w-0 max-w-xs text-gray-400 text-sm">
@@ -51,6 +50,7 @@ export default function PlayerBar() {
 
           <PlayerControls
             isPlaying={isPlaying}
+            isLoading={isLoading}
             isShuffle={isShuffle}
             repeatMode={repeatMode}
             currentTime={currentTime}
