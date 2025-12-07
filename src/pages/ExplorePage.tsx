@@ -1,4 +1,5 @@
 import { GenreSection, MoodSection, TopChartsSection } from '../components/explore';
+import { PageLayout } from '../components';
 import { MOCK_GENRES, MOCK_MOODS, MOCK_CHARTS } from '../data';
 import type { Genre, Mood, Chart } from '../types';
 
@@ -23,22 +24,16 @@ export default function ExplorePage({ isSidebarOpen }: ExplorePageProps) {
   };
 
   return (
-    <div
-      className={`min-h-screen bg-gradient-to-b from-gray-50 via-white to-gray-50 text-gray-900 pt-16 pb-28 transition-all duration-300 ${
-        isSidebarOpen ? 'pl-0 lg:pl-64 2xl:pl-20' : 'pl-0 lg:pl-20'
-      }`}
-    >
-      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">탐색</h1>
-          <p className="text-gray-600">새로운 음악을 발견해보세요</p>
-        </div>
-
-        <GenreSection genres={MOCK_GENRES} onGenreClick={handleGenreClick} />
-        <MoodSection moods={MOCK_MOODS} onMoodClick={handleMoodClick} />
-        <TopChartsSection charts={MOCK_CHARTS} onChartClick={handleChartClick} />
+    <PageLayout isSidebarOpen={isSidebarOpen}>
+      {/* Header */}
+      <div className="mb-8">
+        <h1 className="text-4xl font-bold text-gray-900 mb-2">탐색</h1>
+        <p className="text-gray-600">새로운 음악을 발견해보세요</p>
       </div>
-    </div>
+
+      <GenreSection genres={MOCK_GENRES} onGenreClick={handleGenreClick} />
+      <MoodSection moods={MOCK_MOODS} onMoodClick={handleMoodClick} />
+      <TopChartsSection charts={MOCK_CHARTS} onChartClick={handleChartClick} />
+    </PageLayout>
   );
 }

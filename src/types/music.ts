@@ -1,22 +1,18 @@
 export interface Song {
-  id: number | string;
+  id: string;
   title: string;
   artist: string;
-  album: string;
   thumbnail: string;
   duration: string;
-  previewUrl?: string; // Spotify 미리듣기 URL
-  spotifyUrl?: string; // Spotify 링크
   videoId?: string; // YouTube Music video ID
 }
 
 export interface Playlist {
-  id: number | string;
-  title: string;
+  id: string;
+  name: string;
   description: string;
   thumbnail: string;
-  tracksCount?: number;
-  spotifyUrl?: string;
+  trackCount: number;
 }
 
 export interface NavItem {

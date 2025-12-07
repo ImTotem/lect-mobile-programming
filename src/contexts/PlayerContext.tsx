@@ -2,12 +2,12 @@ import {
   createContext,
   useContext,
   useState,
-  useRef,
   useEffect,
 } from 'react';
 import type { ReactNode } from 'react';
 import type { Song } from '../types/music';
 import { getSongStreamUrl } from '../services/ytmusic';
+import { useAudioPlayer, useQueueManagement } from '../hooks';
 
 interface PlayerContextType {
   currentSong: Song | null;
@@ -35,46 +35,47 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
-  const [volume, setVolumeState] = useState(70);
-  const [queue, setQueue] = useState<Song[]>([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // 오디오 정리 함수
-  const cleanupAudio = () => {
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.src = '';
-      audioRef.current = null;
-    }
-  };
+  // localStorage에서 저장된 볼륨 불러오기 (기본값 50)
+  const [volume, setVolumeState] = useState(() => {
+    const savedVolume = localStorage.getItem('playerVolume');
+    return savedVolume ? parseInt(savedVolume, 10) : 50;
+  });
 
-  // 오디오 설정 함수
-  const setupAudio = (audio: HTMLAudioElement) => {
-    audio.volume = volume / 100;
+  // Custom hooks 사용
+  const { audioRef, cleanupAudio, createAudio } = useAudioPlayer(volume);
+  const {
+    queue,
+    currentIndex,
+    addToQueue: addSongToQueue,
+    clearQueue,
+    setQueueWithIndex,
+    moveToNext,
+    moveToPrevious,
+  } = useQueueManagement();
 
-    audio.addEventListener('loadedmetadata', () => {
-      setDuration(audio.duration);
-    });
-
-    audio.addEventListener('timeupdate', () => {
-      setCurrentTime(audio.currentTime);
-    });
-
-    audio.addEventListener('ended', () => {
+  // 오디오 이벤트 핸들러들
+  const audioHandlers = {
+    onLoadedMetadata: () => {
+      if (audioRef.current) {
+        setDuration(audioRef.current.duration);
+      }
+    },
+    onTimeUpdate: () => {
+      if (audioRef.current) {
+        setCurrentTime(audioRef.current.currentTime);
+      }
+    },
+    onEnded: () => {
       setIsPlaying(false);
       setCurrentTime(0);
       // 자동으로 다음 곡 재생
-      if (currentIndex < queue.length - 1) {
-        playNext();
-      }
-    });
-
-    audio.addEventListener('error', (e) => {
+      playNext();
+    },
+    onError: (e: Event) => {
       console.error('재생 오류:', e);
       setIsPlaying(false);
-      alert('음악을 재생할 수 없습니다. 다른 곡을 선택해주세요.');
-    });
+    },
   };
 
   const playSong = async (song: Song, addToQueue = true) => {
@@ -91,33 +92,21 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
           alert('이 곡은 현재 재생할 수 없습니다. 다른 곡을 선택해주세요.');
           return;
         }
-      }
-      // Spotify preview URL을 사용하는 경우 (폴백)
-      else if (song.previewUrl) {
-        streamUrl = song.previewUrl;
-      }
-
-      if (!streamUrl) {
+      } else {
         console.error('재생 가능한 URL이 없습니다.');
         alert('이 곡은 현재 재생할 수 없습니다. 다른 곡을 선택해주세요.');
         return;
       }
 
       // 새 오디오 생성
-      const audio = new Audio(streamUrl);
-      setupAudio(audio);
-
+      const audio = createAudio(streamUrl, audioHandlers);
       audioRef.current = audio;
       setCurrentSong(song);
       setIsPlaying(true);
 
       // 큐에 추가
       if (addToQueue) {
-        setQueue((prev) => {
-          const newQueue = [...prev, song];
-          setCurrentIndex(newQueue.length - 1);
-          return newQueue;
-        });
+        addSongToQueue(song);
       }
 
       await audio.play();
@@ -131,10 +120,9 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   const playQueue = async (songs: Song[], startIndex = 0) => {
     if (songs.length === 0) return;
 
-    setQueue(songs);
-    setCurrentIndex(startIndex);
-
+    setQueueWithIndex(songs, startIndex);
     const song = songs[startIndex];
+
     cleanupAudio();
 
     try {
@@ -147,49 +135,39 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
           alert('이 곡은 현재 재생할 수 없습니다.');
           return;
         }
-      } else if (song.previewUrl) {
-        streamUrl = song.previewUrl;
-      }
-
-      if (!streamUrl) {
+      } else {
         console.error('재생 가능한 URL이 없습니다.');
         alert('이 곡은 현재 재생할 수 없습니다.');
         return;
       }
 
-      const audio = new Audio(streamUrl);
-      setupAudio(audio);
-
+      const audio = createAudio(streamUrl, audioHandlers);
       audioRef.current = audio;
       setCurrentSong(song);
       setIsPlaying(true);
 
       await audio.play();
     } catch (error) {
-      console.error('재생 실패:', error);
+      console.error('큐 재생 실패:', error);
       setIsPlaying(false);
-      alert('음악 재생에 실패했습니다.');
     }
   };
 
   const togglePlay = () => {
-    if (!audioRef.current) return;
-
-    if (isPlaying) {
-      audioRef.current.pause();
-      setIsPlaying(false);
-    } else {
-      audioRef.current.play().catch((error) => {
-        console.error('재생 실패:', error);
+    if (audioRef.current) {
+      if (isPlaying) {
+        audioRef.current.pause();
         setIsPlaying(false);
-        alert('음악 재생에 실패했습니다.');
-      });
-      setIsPlaying(true);
+      } else {
+        audioRef.current.play();
+        setIsPlaying(true);
+      }
     }
   };
 
   const setVolume = (newVolume: number) => {
     setVolumeState(newVolume);
+    localStorage.setItem('playerVolume', newVolume.toString());
     if (audioRef.current) {
       audioRef.current.volume = newVolume / 100;
     }
@@ -203,19 +181,8 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   };
 
   const playNext = async () => {
-    if (queue.length === 0) {
-      console.log('큐가 비어있습니다.');
-      return;
-    }
-
-    const nextIndex = currentIndex + 1;
-    if (nextIndex >= queue.length) {
-      console.log('마지막 곡입니다.');
-      return;
-    }
-
-    setCurrentIndex(nextIndex);
-    const nextSong = queue[nextIndex];
+    const nextSong = moveToNext();
+    if (!nextSong) return;
 
     cleanupAudio();
 
@@ -228,18 +195,12 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
           console.error('스트리밍 URL을 가져올 수 없습니다.');
           return;
         }
-      } else if (nextSong.previewUrl) {
-        streamUrl = nextSong.previewUrl;
-      }
-
-      if (!streamUrl) {
+      } else {
         console.error('재생 가능한 URL이 없습니다.');
         return;
       }
 
-      const audio = new Audio(streamUrl);
-      setupAudio(audio);
-
+      const audio = createAudio(streamUrl, audioHandlers);
       audioRef.current = audio;
       setCurrentSong(nextSong);
       setIsPlaying(true);
@@ -252,26 +213,8 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   };
 
   const playPrevious = async () => {
-    if (queue.length === 0) {
-      console.log('큐가 비어있습니다.');
-      return;
-    }
-
-    // 현재 재생 시간이 3초 이상이면 처음부터 재생
-    if (currentTime > 3) {
-      seek(0);
-      return;
-    }
-
-    const prevIndex = currentIndex - 1;
-    if (prevIndex < 0) {
-      console.log('첫 번째 곡입니다.');
-      seek(0);
-      return;
-    }
-
-    setCurrentIndex(prevIndex);
-    const prevSong = queue[prevIndex];
+    const prevSong = moveToPrevious();
+    if (!prevSong) return;
 
     cleanupAudio();
 
@@ -284,18 +227,12 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
           console.error('스트리밍 URL을 가져올 수 없습니다.');
           return;
         }
-      } else if (prevSong.previewUrl) {
-        streamUrl = prevSong.previewUrl;
-      }
-
-      if (!streamUrl) {
+      } else {
         console.error('재생 가능한 URL이 없습니다.');
         return;
       }
 
-      const audio = new Audio(streamUrl);
-      setupAudio(audio);
-
+      const audio = createAudio(streamUrl, audioHandlers);
       audioRef.current = audio;
       setCurrentSong(prevSong);
       setIsPlaying(true);
@@ -307,21 +244,12 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const addToQueue = (song: Song) => {
-    setQueue((prev) => [...prev, song]);
-  };
-
-  const clearQueue = () => {
-    setQueue([]);
-    setCurrentIndex(0);
-  };
-
   // 컴포넌트 언마운트 시 오디오 정리
   useEffect(() => {
     return () => {
       cleanupAudio();
     };
-  }, []);
+  }, [cleanupAudio]);
 
   return (
     <PlayerContext.Provider
@@ -340,7 +268,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
         seek,
         playNext,
         playPrevious,
-        addToQueue,
+        addToQueue: addSongToQueue,
         clearQueue,
       }}
     >

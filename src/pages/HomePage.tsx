@@ -3,6 +3,7 @@ import HeroSection from '../components/home/HeroSection';
 import QuickPlaySection from '../components/home/QuickPlaySection';
 import PlaylistSection from '../components/home/PlaylistSection';
 import ChartSection from '../components/home/ChartSection';
+import { PageLayout, LoadingSpinner } from '../components';
 import { getTrendingMusic, getFeaturedPlaylists } from '../services';
 import { usePlayer } from '../contexts';
 import type { Song, Playlist } from '../types/music';
@@ -51,45 +52,30 @@ export default function HomePage({ isSidebarOpen }: HomePageProps) {
 
   if (isLoading) {
     return (
-      <div
-        className={`min-h-screen bg-gradient-to-b from-gray-50 via-white to-gray-50 text-gray-900 pt-16 pb-28 transition-all duration-300 ${isSidebarOpen ? 'pl-0 lg:pl-64 2xl:pl-20' : 'pl-0 lg:pl-20'
-          }`}
-      >
-        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="flex items-center justify-center h-96">
-            <div className="text-center">
-              <div className="w-16 h-16 border-4 border-gray-200 border-t-red-500 rounded-full animate-spin mx-auto mb-4" />
-              <p className="text-gray-600">음악을 불러오는 중...</p>
-            </div>
-          </div>
-        </div>
-      </div>
+      <PageLayout isSidebarOpen={isSidebarOpen}>
+        <LoadingSpinner message="음악을 불러오는 중..." />
+      </PageLayout>
     );
   }
 
   return (
-    <div
-      className={`min-h-screen bg-gradient-to-b from-gray-50 via-white to-gray-50 text-gray-900 pt-16 pb-28 transition-all duration-300 ${isSidebarOpen ? 'pl-0 lg:pl-64 2xl:pl-20' : 'pl-0 lg:pl-20'
-        }`}
-    >
-      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <HeroSection
-          title="음악의 모든 것"
-          subtitle="무제한으로 즐기는 음악 스트리밍"
-        />
+    <PageLayout isSidebarOpen={isSidebarOpen}>
+      <HeroSection
+        title="음악의 모든 것"
+        subtitle="무제한으로 즐기는 음악 스트리밍"
+      />
 
-        <QuickPlaySection
-          songs={trendingSongs.slice(0, 6)}
-          onSongClick={handleSongClick}
-        />
+      <QuickPlaySection
+        songs={trendingSongs.slice(0, 6)}
+        onSongClick={handleSongClick}
+      />
 
-        <PlaylistSection
-          playlists={playlists}
-          onPlaylistClick={handlePlaylistClick}
-        />
+      <PlaylistSection
+        playlists={playlists}
+        onPlaylistClick={handlePlaylistClick}
+      />
 
-        <ChartSection songs={trendingSongs} onSongClick={handleSongClick} />
-      </div>
-    </div>
+      <ChartSection songs={trendingSongs} onSongClick={handleSongClick} />
+    </PageLayout>
   );
 }
