@@ -4,26 +4,64 @@ import { PlayerProvider } from './contexts';
 import { Header, Sidebar, PlayerBar, QueueView } from './components';
 import HomePage from './pages/HomePage';
 import ExplorePage from './pages/ExplorePage';
+import GenreDetail from './pages/GenreDetail';
+import PlaylistDetail from './pages/PlaylistDetail';
+
+type PageState =
+  | { type: 'home' }
+  | { type: 'explore' }
+  | { type: 'library' }
+  | { type: 'recent' }
+  | { type: 'playlist'; playlistId: string | number; title?: string }
+  | { type: 'genre'; params: string; title: string; color?: string };
 
 function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useLocalStorage('sidebar-open', true);
-  const [currentPage, setCurrentPage] = useLocalStorage<'home' | 'explore' | 'library' | 'recent'>('current-page', 'home');
+  // Default to home, but use object state
+  const [currentPage, setCurrentPage] = useState<PageState>({ type: 'home' });
   const [isQueueViewOpen, setIsQueueViewOpen] = useState(false);
 
   const toggleSidebar = () => {
     setIsSidebarOpen((prev) => !prev);
   };
 
-  const handleNavigate = (page: 'home' | 'explore' | 'library' | 'recent') => {
+  const handleNavigate = (page: PageState) => {
     setCurrentPage(page);
   };
 
   const renderPage = () => {
-    switch (currentPage) {
+    switch (currentPage.type) {
       case 'home':
         return <HomePage isSidebarOpen={isSidebarOpen} />;
       case 'explore':
-        return <ExplorePage isSidebarOpen={isSidebarOpen} />;
+        return (
+          <ExplorePage
+            isSidebarOpen={isSidebarOpen}
+            onNavigate={handleNavigate}
+          />
+        );
+      case 'genre':
+        return (
+          <GenreDetail
+            isSidebarOpen={isSidebarOpen}
+            genreParams={currentPage.params}
+            title={currentPage.title}
+            initialColor={currentPage.color}
+            onBack={() => setCurrentPage({ type: 'explore' })}
+            onPlaylistClick={(playlist) =>
+              setCurrentPage({ type: 'playlist', playlistId: playlist.id, title: playlist.title })
+            }
+          />
+        );
+      case 'playlist':
+        return (
+          <PlaylistDetail
+            isSidebarOpen={isSidebarOpen}
+            playlistId={currentPage.playlistId}
+            initialTitle={currentPage.title}
+            onBack={() => setCurrentPage({ type: 'explore' })} // Or go back to genre if history existed
+          />
+        );
       case 'library':
         return (
           <div className={`min-h-screen bg-white pt-16 pb-28 transition-all duration-300 ${isSidebarOpen ? 'pl-0 lg:pl-64 2xl:pl-20' : 'pl-0 lg:pl-20'
@@ -55,15 +93,15 @@ function App() {
         <Header
           onMenuClick={toggleSidebar}
           onLogoClick={() => {
-            setCurrentPage('home');
+            setCurrentPage({ type: 'home' });
             setIsQueueViewOpen(false);
           }}
         />
         <Sidebar
           isOpen={isSidebarOpen}
           onClose={() => setIsSidebarOpen(false)}
-          currentPage={currentPage}
-          onNavigate={handleNavigate}
+          currentPage={currentPage.type === 'home' || currentPage.type === 'explore' || currentPage.type === 'library' || currentPage.type === 'recent' ? currentPage.type : 'explore'}
+          onNavigate={(page) => handleNavigate({ type: page })}
         />
         {renderPage()}
         <PlayerBar onExpand={() => setIsQueueViewOpen(!isQueueViewOpen)} />

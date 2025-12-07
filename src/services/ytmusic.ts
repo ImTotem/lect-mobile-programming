@@ -29,8 +29,36 @@ export async function searchMusic(query: string): Promise<Song[]> {
   }
 }
 
+// ... existing imports ...
+
 /**
- * 인기 차트 가져오기
+ * 차트 목록 가져오기 (Explore Page용)
+ */
+export async function getChartList(): Promise<any[]> {
+  try {
+    const data = await ytmusicFetch('/api/charts/list');
+    return data.results || [];
+  } catch (error) {
+    console.error('Chart list error:', error);
+    return [];
+  }
+}
+
+/**
+ * 분위기/장르 상세 플레이리스트 가져오기
+ */
+export async function getMoodPlaylists(params: string): Promise<Playlist[]> {
+  try {
+    const data = await ytmusicFetch(`/api/moods/playlists?params=${encodeURIComponent(params)}`);
+    return data.results || [];
+  } catch (error) {
+    console.error('Mood playlists error:', error);
+    return [];
+  }
+}
+
+/**
+ * 인기 차트 가져오기 (Home Page용 - 곡 리스트 반환)
  */
 export async function getTrendingMusic(): Promise<Song[]> {
   try {
@@ -65,6 +93,25 @@ export async function getPlaylistTracks(playlistId: string | number): Promise<So
   } catch (error) {
     console.error('Playlist tracks error:', error);
     return [];
+  }
+}
+
+/**
+ * 플레이리스트 상세 정보 가져오기
+ */
+export async function getPlaylist(playlistId: string | number): Promise<Playlist | null> {
+  try {
+    const data = await ytmusicFetch(`/api/playlists/${playlistId}?limit=50`);
+    return {
+      id: data.id,
+      title: data.title,
+      description: data.description,
+      thumbnail: data.thumbnail,
+      tracksCount: data.tracksCount
+    };
+  } catch (error) {
+    console.error('Playlist info error:', error);
+    return null;
   }
 }
 
@@ -118,5 +165,18 @@ export async function playAudio(videoId: string): Promise<HTMLAudioElement | nul
   } catch (error) {
     console.error('Play audio error:', error);
     return null;
+  }
+}
+
+/**
+ * 분위기 및 장르 카테고리 가져오기
+ */
+export async function getMoodCategories(): Promise<any> {
+  try {
+    const data = await ytmusicFetch('/api/moods');
+    return data;
+  } catch (error) {
+    console.error('Mood categories error:', error);
+    return {};
   }
 }

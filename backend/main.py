@@ -428,6 +428,117 @@ async def get_lyrics(browse_id: str):
 
 
 
+@app.get("/api/charts/list")
+async def get_chart_list():
+    try:
+        # 한국 차트 목록 조회
+        charts = ytmusic.get_charts(country="KR")
+        
+        results = []
+        
+        # 차트 데이터 파싱
+        # charts는 {'countries': {...}, 'global': {...}, 'videos': {...}, 'artists': {...}} 형태일 수 있음
+        # 또는 바로 리스트일 수도 있음 (ytmusicapi 버전에 따라 다름)
+        
+        # 주요 차트 카테고리 순회
+        chart_categories = ["videos", "artists", "daily", "weekly", "trending"]
+        
+        for category in chart_categories:
+            if category in charts and charts[category]:
+                items = charts[category]
+                # items는 리스트 또는 딕셔너리
+                if isinstance(items, list):
+                    for item in items: # list limiting is handled in frontend or by nature of limited charts
+                        # playlistId가 있는 항목만 처리 (재생 가능한 차트)
+                        if "playlistId" in item:
+                            thumbnail = ""
+                            if item.get("thumbnails"):
+                                thumbnail = item["thumbnails"][-1]["url"]
+                            
+                            chart = {
+                                "id": int(datetime.now().timestamp() * 1000) + hash(item.get("playlistId")), # 임의 ID
+                                "title": item.get("title", f"Top Chart ({category})"),
+                                "country": "KR",
+                                "thumbnail": thumbnail,
+                                "songs": 100, # 대략적인 수치
+                                "playlistId": item.get("playlistId"),
+                                "params": item.get("params")
+                            }
+                            results.append(chart)
+
+        # 결과가 없으면 트렌딩 음악으로 기본 차트 구성 시도 (Fallback)
+        if not results:
+             results.append({
+                 "id": 1,
+                 "title": "한국 인기곡 Top 100",
+                 "country": "KR",
+                 "thumbnail": "https://music.youtube.com/img/trending/trending_1.png", # Fallback image
+                 "songs": 100,
+                 "playlistId": "PL4fGSI1pDJn6jXS_Ix_YyccC20CsxbklJ" # Default Top 100 KR ID
+             })
+             
+        return {"results": results}
+    
+    except Exception as e:
+        traceback.print_exception(e)
+        # 오류 발생 시 빈 리스트 반환 (프론트엔드에서 처리)
+        return {"results": []}
+
+
+@app.get("/api/moods/playlists")
+async def get_mood_playlists(
+    params: str = Query(..., description="무드/장르 파라미터")
+):
+    try:
+        # 해당 무드/장르의 플레이리스트 조회
+        playlists = ytmusic.get_mood_playlists(params=params)
+        
+        results = []
+        for item in playlists:
+            thumbnail = ""
+            if item.get("thumbnails"):
+                thumbnail = item["thumbnails"][-1]["url"]
+            
+            playlist = {
+                "id": item.get("playlistId", ""),
+                "title": item.get("title", ""),
+                "description": item.get("description", ""),
+                "thumbnail": thumbnail,
+                "tracksCount": int(item.get("count", "0").split(" ")[0].replace(",", "")) if item.get("count") else 0,
+                "author": item.get("author", "")
+            }
+            results.append(playlist)
+            
+        return {"results": results}
+        
+    except Exception as e:
+        traceback.print_exception(e)
+        raise HTTPException(status_code=500, detail=f"플레이리스트 조회 중 오류 발생: {str(e)}")
+
+
+@app.get("/api/moods")
+async def get_mood_categories():
+    try:
+        categories = ytmusic.get_mood_categories()
+        
+        # Transform into a more frontend-friendly format
+        result = {}
+        for section_title, items in categories.items():
+            formatted_items = []
+            for item in items:
+                formatted_items.append({
+                    "title": item.get("title"),
+                    "params": item.get("params") 
+                })
+            result[section_title] = formatted_items
+            
+        return result
+    except Exception as e:
+        print(f"Error fetching mood categories: {str(e)}")
+        # Fallback empty structure if API fails
+        return {}
+
+
 if __name__ == "__main__":
     import uvicorn
     
