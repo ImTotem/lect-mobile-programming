@@ -5,6 +5,7 @@ import UserButton from './UserButton';
 interface HeaderProps {
   onMenuClick: () => void;
   onLogoClick?: () => void;
+  onNavigate: (page: any) => void;
   user?: {
     name: string;
     email: string;
@@ -12,10 +13,10 @@ interface HeaderProps {
   };
 }
 
-export default function Header({ onMenuClick, onLogoClick, user }: HeaderProps) {
+export default function Header({ onMenuClick, onLogoClick, onNavigate, user }: HeaderProps) {
   const handleSearch = (query: string) => {
     console.log('Searching for:', query);
-    // TODO: 검색 결과 페이지로 이동
+    onNavigate({ type: 'search', query });
   };
 
   return (

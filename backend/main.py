@@ -94,6 +94,18 @@ async def search_music(
         raise HTTPException(status_code=500, detail=f"검색 중 오류 발생: {str(e)}")
 
 
+@app.get("/api/search/suggestions")
+async def get_search_suggestions(
+    q: str = Query(..., description="검색 쿼리")
+):
+    try:
+        suggestions = ytmusic.get_search_suggestions(q, detailed_runs=False)
+        return {"results": suggestions}
+    except Exception as e:
+        print(f"Suggestions error: {e}")
+        return {"results": []}
+
+
 @app.get("/api/charts")
 async def get_charts(
     limit: int = Query(20, ge=1, le=50, description="결과 개수")

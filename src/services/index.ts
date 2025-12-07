@@ -6,4 +6,5 @@ export {
   getPlaylistTracks,
   formatDuration,
   playAudio,
+  getSearchSuggestions,
 } from './ytmusic';

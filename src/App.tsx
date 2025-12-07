@@ -6,6 +6,7 @@ import HomePage from './pages/HomePage';
 import ExplorePage from './pages/ExplorePage';
 import GenreDetail from './pages/GenreDetail';
 import PlaylistDetail from './pages/PlaylistDetail';
+import SearchPage from './pages/SearchPage';
 
 type PageState =
   | { type: 'home' }
@@ -13,7 +14,8 @@ type PageState =
   | { type: 'library' }
   | { type: 'recent' }
   | { type: 'playlist'; playlistId: string | number; title?: string }
-  | { type: 'genre'; params: string; title: string; color?: string };
+  | { type: 'genre'; params: string; title: string; color?: string }
+  | { type: 'search'; query: string };
 
 function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useLocalStorage('sidebar-open', true);
@@ -62,6 +64,13 @@ function App() {
             onBack={() => setCurrentPage({ type: 'explore' })} // Or go back to genre if history existed
           />
         );
+      case 'search':
+        return (
+          <SearchPage
+            isSidebarOpen={isSidebarOpen}
+            query={currentPage.query}
+          />
+        );
       case 'library':
         return (
           <div className={`min-h-screen bg-white pt-16 pb-28 transition-all duration-300 ${isSidebarOpen ? 'pl-0 lg:pl-64' : 'pl-0 lg:pl-20'
@@ -92,6 +101,7 @@ function App() {
       <div className="min-h-screen bg-white">
         <Header
           onMenuClick={toggleSidebar}
+          onNavigate={handleNavigate}
           onLogoClick={() => {
             setCurrentPage({ type: 'home' });
             setIsQueueViewOpen(false);

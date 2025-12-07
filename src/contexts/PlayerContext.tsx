@@ -421,6 +421,25 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     };
   }, [cleanupAudio]);
 
+  // Global Spacebar Listener for Play/Pause
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.code === 'Space') {
+        // 입력 요소에 포커스가 있으면 무시
+        const activeEl = document.activeElement;
+        const isInput = activeEl instanceof HTMLInputElement || activeEl instanceof HTMLTextAreaElement || (activeEl as HTMLElement).isContentEditable;
+
+        if (!isInput) {
+          e.preventDefault();
+          togglePlay();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [togglePlay]);
+
   return (
     <PlayerContext.Provider
       value={{

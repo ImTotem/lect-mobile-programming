@@ -29,6 +29,19 @@ export async function searchMusic(query: string): Promise<Song[]> {
   }
 }
 
+/**
+ * 검색어 자동완성 (추천 검색어)
+ */
+export async function getSearchSuggestions(query: string): Promise<string[]> {
+  try {
+    const data = await ytmusicFetch(`/api/search/suggestions?q=${encodeURIComponent(query)}`);
+    return data.results || [];
+  } catch (error) {
+    console.error('Suggestions error:', error);
+    return [];
+  }
+}
+
 // ... existing imports ...
 
 /**
