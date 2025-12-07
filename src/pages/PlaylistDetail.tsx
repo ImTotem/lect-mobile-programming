@@ -102,14 +102,14 @@ export default function PlaylistDetail({
                                 <div className="flex gap-4">
                                     <button
                                         onClick={handlePlayAll}
-                                        className="flex items-center px-6 py-3 bg-black text-white rounded-full hover:bg-gray-800 transition-colors dark:bg-white dark:text-black dark:hover:bg-gray-200"
+                                        className="flex items-center px-6 py-3 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shadow-md"
                                     >
                                         <FiPlay className="w-5 h-5 mr-2 fill-current" />
                                         모두 재생
                                     </button>
                                     <button
                                         onClick={handleShuffleRaw}
-                                        className="flex items-center px-6 py-3 bg-gray-100 text-gray-900 rounded-full hover:bg-gray-200 transition-colors"
+                                        className="flex items-center px-6 py-3 bg-gray-200 text-gray-900 rounded-full hover:bg-gray-300 transition-colors dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700"
                                     >
                                         <FiShuffle className="w-5 h-5 mr-2" />
                                         셔플
