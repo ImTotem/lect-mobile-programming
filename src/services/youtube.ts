@@ -95,12 +95,13 @@ export async function searchMusic(query: string): Promise<Song[]> {
       .filter((item) => item.type === 'video')
       .slice(0, 20)
       .map((item) => ({
-        id: parseInt(item.videoId.replace(/\D/g, '').slice(0, 10)) || Math.random(),
+        id: item.videoId,
         title: item.title,
         artist: item.author,
         album: item.author,
         thumbnail: getThumbnailUrl(item.videoThumbnails),
         duration: formatDuration(item.lengthSeconds),
+        videoId: item.videoId,
       }));
   } catch (error) {
     console.error('Music search error:', error);
@@ -116,12 +117,13 @@ export async function getTrendingMusic(): Promise<Song[]> {
     const data: SearchResponse[] = await response.json();
 
     return data.slice(0, 20).map((item) => ({
-      id: parseInt(item.videoId.replace(/\D/g, '').slice(0, 10)) || Math.random(),
+      id: item.videoId,
       title: item.title,
       artist: item.author,
       album: item.author,
       thumbnail: getThumbnailUrl(item.videoThumbnails),
       duration: formatDuration(item.lengthSeconds),
+      videoId: item.videoId,
     }));
   } catch (error) {
     console.error('Trending music error:', error);

@@ -2,7 +2,7 @@ import type { Song, Playlist } from '../types/music';
 
 export const MOCK_SONGS: Song[] = [
   {
-    id: 1,
+    id: '1',
     title: 'Blinding Lights',
     artist: 'The Weeknd',
     album: 'After Hours',
@@ -10,7 +10,7 @@ export const MOCK_SONGS: Song[] = [
     duration: '3:20',
   },
   {
-    id: 2,
+    id: '2',
     title: 'Levitating',
     artist: 'Dua Lipa',
     album: 'Future Nostalgia',
@@ -18,7 +18,7 @@ export const MOCK_SONGS: Song[] = [
     duration: '3:23',
   },
   {
-    id: 3,
+    id: '3',
     title: 'Save Your Tears',
     artist: 'The Weeknd',
     album: 'After Hours',
@@ -26,7 +26,7 @@ export const MOCK_SONGS: Song[] = [
     duration: '3:35',
   },
   {
-    id: 4,
+    id: '4',
     title: 'Good 4 U',
     artist: 'Olivia Rodrigo',
     album: 'SOUR',
@@ -34,7 +34,7 @@ export const MOCK_SONGS: Song[] = [
     duration: '2:58',
   },
   {
-    id: 5,
+    id: '5',
     title: 'Peaches',
     artist: 'Justin Bieber',
     album: 'Justice',
@@ -42,7 +42,7 @@ export const MOCK_SONGS: Song[] = [
     duration: '3:18',
   },
   {
-    id: 6,
+    id: '6',
     title: 'Stay',
     artist: 'The Kid LAROI, Justin Bieber',
     album: 'F*CK LOVE 3',

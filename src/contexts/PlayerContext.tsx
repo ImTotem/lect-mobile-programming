@@ -8,7 +8,7 @@ import {
 } from 'react';
 import type { ReactNode } from 'react';
 import type { Song } from '../types/music';
-import { getSongStreamUrl, getSongInfo } from '../services/ytmusic';
+import { getSongInfo } from '../services/ytmusic';
 import { useAudioPlayer, useQueueManagement } from '../hooks';
 import { getStorageItem, setStorageItem } from '../utils';
 import { STORAGE_KEYS, PLAYER_DEFAULTS } from '../constants';
@@ -23,6 +23,7 @@ interface PlayerContextType {
   queue: Song[];
   currentIndex: number;
   repeatMode: 'off' | 'all' | 'one';
+  isShuffle: boolean;
   playSong: (song: Song, addToQueue?: boolean) => void;
   playQueue: (songs: Song[], startIndex?: number) => void;
   togglePlay: () => void;
@@ -33,6 +34,7 @@ interface PlayerContextType {
   addToQueue: (song: Song) => void;
   clearQueue: () => void;
   setRepeatMode: (mode: 'off' | 'all' | 'one') => void;
+  toggleShuffle: () => void;
 }
 
 const PlayerContext = createContext<PlayerContextType | undefined>(undefined);
@@ -70,10 +72,14 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     moveToPrevious,
   } = useQueueManagement();
 
-  // 최신 queue와 currentIndex를 참조하기 위한 ref (이벤트 핸들러에서 사용)
+  // 최신 queue와 currentIndex를 참조하기 위한 ref
   const queueRef = useRef(queue);
   const currentIndexRef = useRef(currentIndex);
   const repeatModeRef = useRef(repeatMode);
+
+  // 셔플 관련 상태 및 refs
+  const [isShuffle, setIsShuffle] = useState<boolean>(false);
+  const originalQueueRef = useRef<Song[]>([]);
 
   // 진행 중인 로딩 취소를 위한 ref
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -102,16 +108,13 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
 
   // playNext를 먼저 정의 (audioHandlers에서 사용)
   const playNext = useCallback(async () => {
-    // 진행 중인 요청 취소
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
 
-    // 새 AbortController 생성
     const abortController = new AbortController();
     abortControllerRef.current = abortController;
 
-    // 이미 로딩 중이면 현재 오디오 정리하고 계속 진행
     if (isLoading) {
       cleanupAudio();
     }
@@ -126,7 +129,6 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
 
     if (!nextSong) return;
 
-    // UI 먼저 업데이트 (즉각적인 반응)
     setCurrentSong(nextSong);
     setIsPlaying(false);
     setIsLoading(true);
@@ -135,15 +137,9 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
 
     try {
       let streamUrl: string | null = null;
-
       if (nextSong.videoId) {
-        // 전체 곡 정보 가져오기 (lyricsBrowseId 포함)
         const songInfo = await getSongInfo(nextSong.videoId as string);
-
-        // 요청이 취소되었는지 확인
-        if (abortController.signal.aborted) {
-          return;
-        }
+        if (abortController.signal.aborted) return;
 
         if (!songInfo || !songInfo.streamUrl) {
           console.error('스트리밍 URL을 가져올 수 없습니다.');
@@ -152,8 +148,6 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
         }
 
         streamUrl = songInfo.streamUrl;
-
-        // lyricsBrowseId를 currentSong에 업데이트
         const updatedSong = {
           ...nextSong,
           lyricsBrowseId: songInfo.lyricsBrowseId
@@ -165,12 +159,8 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      // 다시 한번 취소 확인
-      if (abortController.signal.aborted) {
-        return;
-      }
+      if (abortController.signal.aborted) return;
 
-      // 오디오 로딩 및 재생
       const audio = createAudio(streamUrl!, getAudioHandlers());
       audioRef.current = audio;
       setIsLoading(false);
@@ -178,20 +168,15 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
 
       await audio.play();
     } catch (error) {
-      // AbortError는 무시
-      if (abortController.signal.aborted) {
-        return;
-      }
+      if (abortController.signal.aborted) return;
       console.error('다음 곡 재생 실패:', error);
       setIsLoading(false);
       setIsPlaying(false);
     }
   }, [moveToNext, repeatMode, queue, setQueueWithIndex, cleanupAudio, createAudio, audioRef, currentIndex, isLoading]);
 
-  // playNext 참조 업데이트
   playNextRef.current = playNext;
 
-  // 오디오 이벤트 핸들러들 - playNext 이후에 정의
   const getAudioHandlers = useCallback(() => ({
     onLoadedMetadata: () => {
       if (audioRef.current) {
@@ -204,7 +189,6 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       }
     },
     onEnded: () => {
-      // ref를 통해 최신 값 참조
       const latestQueue = queueRef.current;
       const latestIndex = currentIndexRef.current;
       const latestRepeatMode = repeatModeRef.current;
@@ -214,17 +198,14 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
 
       // 연속 재생 로직
       if (latestRepeatMode === 'one') {
-        // 한 곡 반복: 같은 곡 다시 재생
         if (audioRef.current) {
           audioRef.current.currentTime = 0;
           audioRef.current.play();
           setIsPlaying(true);
         }
       } else if (latestRepeatMode === 'all') {
-        // 전체 반복: 다음 곡 재생 (마지막 곡이면 처음으로)
         playNextRef.current?.();
       } else {
-        // 반복 없음: 마지막 곡이 아니면 다음 곡 재생
         if (latestIndex < latestQueue.length - 1) {
           playNextRef.current?.();
         }
@@ -237,10 +218,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   }), [audioRef]);
 
   const playSong = async (song: Song, addToQueue = true) => {
-    // 재생 상태 먼저 정지
     setIsPlaying(false);
-
-    // UI 먼저 업데이트 (즉각적인 반응)
     setCurrentSong(song);
     setIsLoading(true);
 
@@ -248,112 +226,21 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
 
     try {
       let streamUrl: string | null = null;
-
-      // YouTube Music API를 사용하는 경우
       if (song.videoId) {
-        // 전체 곡 정보 가져오기 (lyricsBrowseId 포함)
         const songInfo = await getSongInfo(song.videoId as string);
-
-        if (!songInfo || !songInfo.streamUrl) {
-          console.error('스트리밍 URL을 가져올 수 없습니다.');
-          alert('이 곡은 현재 재생할 수 없습니다. 다른 곡을 선택해주세요.');
-          setIsLoading(false);
-          return;
-        }
-
-        streamUrl = songInfo.streamUrl;
-
-        // lyricsBrowseId를 currentSong에 업데이트
-        const updatedSong = {
-          ...song,
-          lyricsBrowseId: songInfo.lyricsBrowseId
-        };
-        setCurrentSong(updatedSong);
-
-        // 큐에 추가할 때도 업데이트된 정보 사용
-        if (addToQueue) {
-          addSongToQueue(updatedSong);
-        }
-      } else {
-        console.error('재생 가능한 URL이 없습니다.');
-        alert('이 곡은 현재 재생할 수 없습니다. 다른 곡을 선택해주세요.');
-        setIsLoading(false);
-        return;
-      }
-
-      // 새 오디오 생성
-      const audio = createAudio(streamUrl!, getAudioHandlers());
-      audioRef.current = audio;
-      setIsLoading(false);
-      setIsPlaying(true);
-
-      await audio.play();
-    } catch (error) {
-      console.error('재생 실패:', error);
-      setIsLoading(false);
-      setIsPlaying(false);
-      alert('음악 재생에 실패했습니다. 다른 곡을 선택해주세요.');
-    }
-  };
-
-  const playQueue = async (songs: Song[], startIndex = 0) => {
-    if (songs.length === 0) return;
-
-    // 이전 로딩 취소
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
-
-    // 새 AbortController 생성
-    const abortController = new AbortController();
-    abortControllerRef.current = abortController;
-
-    setQueueWithIndex(songs, startIndex);
-    const song = songs[startIndex];
-
-    // UI 먼저 업데이트 (즉각적인 반응)
-    setCurrentSong(song);
-    setIsPlaying(false);
-    setIsLoading(true);
-
-    cleanupAudio();
-
-    try {
-      let streamUrl: string | null = null;
-
-      if (song.videoId) {
-        // 전체 곡 정보 가져오기 (lyricsBrowseId 포함)
-        const songInfo = await getSongInfo(song.videoId as string);
-
-        // 취소 확인
-        if (abortController.signal.aborted) {
-          return;
-        }
-
         if (!songInfo || !songInfo.streamUrl) {
           console.error('스트리밍 URL을 가져올 수 없습니다.');
           alert('이 곡은 현재 재생할 수 없습니다.');
           setIsLoading(false);
           return;
         }
-
         streamUrl = songInfo.streamUrl;
-
-        // lyricsBrowseId를 currentSong에 업데이트
-        const updatedSong = {
-          ...song,
-          lyricsBrowseId: songInfo.lyricsBrowseId
-        };
+        const updatedSong = { ...song, lyricsBrowseId: songInfo.lyricsBrowseId };
         setCurrentSong(updatedSong);
+        if (addToQueue) addSongToQueue(updatedSong);
       } else {
         console.error('재생 가능한 URL이 없습니다.');
-        alert('이 곡은 현재 재생할 수 없습니다.');
         setIsLoading(false);
-        return;
-      }
-
-      // 다시 한번 취소 확인
-      if (abortController.signal.aborted) {
         return;
       }
 
@@ -361,13 +248,61 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       audioRef.current = audio;
       setIsLoading(false);
       setIsPlaying(true);
-
       await audio.play();
     } catch (error) {
-      // AbortError는 무시
-      if (abortController.signal.aborted) {
+      console.error('재생 실패:', error);
+      setIsLoading(false);
+      setIsPlaying(false);
+    }
+  };
+
+  const playQueue = async (songs: Song[], startIndex = 0) => {
+    if (songs.length === 0) return;
+
+    // 셔플 초기화
+    setIsShuffle(false);
+    originalQueueRef.current = [];
+
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
+
+    setQueueWithIndex(songs, startIndex);
+    const song = songs[startIndex];
+
+    setCurrentSong(song);
+    setIsPlaying(false);
+    setIsLoading(true);
+    cleanupAudio();
+
+    try {
+      let streamUrl: string | null = null;
+      if (song.videoId) {
+        const songInfo = await getSongInfo(song.videoId as string);
+        if (abortController.signal.aborted) return;
+        if (!songInfo || !songInfo.streamUrl) {
+          console.error('스트리밍 URL을 가져올 수 없습니다.');
+          setIsLoading(false);
+          return;
+        }
+        streamUrl = songInfo.streamUrl;
+        const updatedSong = { ...song, lyricsBrowseId: songInfo.lyricsBrowseId };
+        setCurrentSong(updatedSong);
+      } else {
+        setIsLoading(false);
         return;
       }
+
+      if (abortController.signal.aborted) return;
+      const audio = createAudio(streamUrl!, getAudioHandlers());
+      audioRef.current = audio;
+      setIsLoading(false);
+      setIsPlaying(true);
+      await audio.play();
+    } catch (error) {
+      if (abortController.signal.aborted) return;
       console.error('큐 재생 실패:', error);
       setIsLoading(false);
       setIsPlaying(false);
@@ -384,7 +319,6 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
         setIsPlaying(true);
       }
     } else if (currentSong) {
-      // 새로고침 후 오디오 객체가 없으면 현재 곡 다시 로드
       playSong(currentSong, false);
     }
   };
@@ -405,85 +339,82 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   };
 
   const playPrevious = async () => {
-    // 진행 중인 요청 취소
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
-
-    // 새 AbortController 생성
+    if (abortControllerRef.current) abortControllerRef.current.abort();
     const abortController = new AbortController();
     abortControllerRef.current = abortController;
 
-    // 이미 로딩 중이면 현재 오디오 정리하고 계속 진행
-    if (isLoading) {
-      cleanupAudio();
-    }
+    if (isLoading) cleanupAudio();
 
     const prevSong = moveToPrevious();
     if (!prevSong) return;
 
-    // UI 먼저 업데이트
     setCurrentSong(prevSong);
     setIsPlaying(false);
     setIsLoading(true);
-
     cleanupAudio();
 
     try {
       let streamUrl: string | null = null;
-
       if (prevSong.videoId) {
-        // 전체 곡 정보 가져오기 (lyricsBrowseId 포함)
         const songInfo = await getSongInfo(prevSong.videoId as string);
-
-        // 요청이 취소되었는지 확인
-        if (abortController.signal.aborted) {
-          return;
-        }
-
+        if (abortController.signal.aborted) return;
         if (!songInfo || !songInfo.streamUrl) {
-          console.error('스트리밍 URL을 가져올 수 없습니다.');
           setIsLoading(false);
           return;
         }
-
         streamUrl = songInfo.streamUrl;
-
-        // lyricsBrowseId를 currentSong에 업데이트
-        const updatedSong = {
-          ...prevSong,
-          lyricsBrowseId: songInfo.lyricsBrowseId
-        };
+        const updatedSong = { ...prevSong, lyricsBrowseId: songInfo.lyricsBrowseId };
         setCurrentSong(updatedSong);
       } else {
-        console.error('재생 가능한 URL이 없습니다.');
         setIsLoading(false);
         return;
       }
 
-      // 다시 한번 취소 확인
-      if (abortController.signal.aborted) {
-        return;
-      }
-
+      if (abortController.signal.aborted) return;
       const audio = createAudio(streamUrl!, getAudioHandlers());
       audioRef.current = audio;
       setIsLoading(false);
       setIsPlaying(true);
-
       await audio.play();
     } catch (error) {
-      // AbortError는 무시
-      if (abortController.signal.aborted) {
-        return;
-      }
+      if (abortController.signal.aborted) return;
       console.error('이전 곡 재생 실패:', error);
       setIsLoading(false);
       setIsPlaying(false);
     }
   };
 
-  // 컴포넌트 언마운트 시 오디오 정리
+  const toggleShuffle = useCallback(() => {
+    setIsShuffle((prev) => {
+      const newShuffleState = !prev;
+      if (newShuffleState) {
+        if (queue.length > 0) {
+          originalQueueRef.current = [...queue];
+          const currentSong = queue[currentIndex];
+          const remainingSongs = queue.filter((_, index) => index !== currentIndex);
+          for (let i = remainingSongs.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [remainingSongs[i], remainingSongs[j]] = [remainingSongs[j], remainingSongs[i]];
+          }
+          if (currentIndex === -1) {
+            setQueueWithIndex(remainingSongs, -1);
+          } else {
+            const newQueue = [currentSong, ...remainingSongs];
+            setQueueWithIndex(newQueue, 0);
+          }
+        }
+      } else {
+        if (originalQueueRef.current.length > 0) {
+          const currentSong = queue[currentIndex];
+          const originalIndex = originalQueueRef.current.findIndex(s => s.id === currentSong?.id);
+          setQueueWithIndex(originalQueueRef.current, originalIndex !== -1 ? originalIndex : 0);
+          originalQueueRef.current = [];
+        }
+      }
+      return newShuffleState;
+    });
+  }, [queue, currentIndex, setQueueWithIndex]);
+
   useEffect(() => {
     return () => {
       cleanupAudio();
@@ -502,6 +433,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
         queue,
         currentIndex,
         repeatMode,
+        isShuffle,
         playSong,
         playQueue,
         togglePlay,
@@ -512,6 +444,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
         addToQueue: addSongToQueue,
         clearQueue,
         setRepeatMode,
+        toggleShuffle,
       }}
     >
       {children}

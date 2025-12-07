@@ -4,6 +4,7 @@ export interface Song {
   artist: string;
   thumbnail: string;
   duration: string;
+  album?: string;
   videoId?: string; // YouTube Music video ID
   lyricsBrowseId?: string; // Lyrics browse ID for fetching lyrics
 }

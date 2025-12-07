@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { usePlayer } from '../contexts/PlayerContext';
 import { SongInfo, PlayerControls, ProgressBar, VolumeControl } from './index';
 
@@ -15,15 +14,18 @@ export default function PlayerBar({ onExpand }: PlayerBarProps) {
     duration,
     volume,
     repeatMode,
+    isShuffle, // Get from context
     togglePlay,
     setVolume,
     seek,
     playNext,
     playPrevious,
     setRepeatMode,
+    toggleShuffle, // Get from context
   } = usePlayer();
 
-  const [isShuffle, setIsShuffle] = useState(false);
+  // Remove local isShuffle state
+  // const [isShuffle, setIsShuffle] = useState(false);
 
   const handleRepeatToggle = () => {
     setRepeatMode(
@@ -67,7 +69,7 @@ export default function PlayerBar({ onExpand }: PlayerBarProps) {
               onPlayPause={togglePlay}
               onPrevious={playPrevious}
               onNext={playNext}
-              onShuffleToggle={() => setIsShuffle(!isShuffle)}
+              onShuffleToggle={toggleShuffle}
               onRepeatToggle={handleRepeatToggle}
             />
           </div>
