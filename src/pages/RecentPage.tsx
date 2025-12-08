@@ -20,27 +20,27 @@ export default function RecentPage({ isSidebarOpen }: RecentPageProps) {
         <div className={`min-h-screen bg-white pt-16 pb-28 transition-all duration-300 ${isSidebarOpen ? 'pl-0 lg:pl-64' : 'pl-0 lg:pl-20'
             }`}>
             <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <div className="flex items-center gap-4 mb-8">
+                <div className="flex flex-wrap items-center gap-4 mb-8">
                     <div className="p-4 bg-blue-100 rounded-full text-blue-600">
                         <FiClock className="w-8 h-8" />
                     </div>
-                    <div>
-                        <h1 className="text-3xl font-bold text-gray-900">최근 재생한 곡</h1>
+                    <div className="flex-1 min-w-0">
+                        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">최근 재생한 곡</h1>
                         <p className="text-gray-500 mt-1">{recentSongs.length}곡</p>
                     </div>
-                    <div className="ml-auto flex gap-2">
+                    <div className="flex gap-2 w-full sm:w-auto sm:ml-auto">
                         {recentSongs.length > 0 && (
                             <>
                                 <button
                                     onClick={clearRecent}
-                                    className="px-4 py-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors flex items-center gap-2 text-sm font-medium"
+                                    className="px-3 sm:px-4 py-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors flex items-center gap-2 text-sm font-medium"
                                 >
                                     <FiTrash2 className="w-4 h-4" />
-                                    기록 삭제
+                                    <span className="hidden sm:inline">기록 삭제</span>
                                 </button>
                                 <button
                                     onClick={handlePlayAll}
-                                    className="flex items-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-full font-medium transition-colors shadow-lg shadow-red-600/20 active:scale-95"
+                                    className="flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-red-600 hover:bg-red-700 text-white rounded-full font-medium transition-colors shadow-lg shadow-red-600/20 active:scale-95 flex-1 sm:flex-initial justify-center"
                                 >
                                     <FiPlay className="fill-current w-5 h-5" />
                                     <span>모두 재생</span>
