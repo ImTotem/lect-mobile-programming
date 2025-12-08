@@ -12,7 +12,6 @@ type TabType = 'queue' | 'lyrics';
 export default function QueueView({ isOpen, onClose }: QueueViewProps) {
     const { currentSong, queue, currentIndex, playQueue } = usePlayer();
     const [activeTab, setActiveTab] = useState<TabType>('queue');
-    const [lyricsBrowseId, setLyricsBrowseId] = useState<string | undefined>();
 
     useEffect(() => {
         if (isOpen) {
@@ -24,21 +23,6 @@ export default function QueueView({ isOpen, onClose }: QueueViewProps) {
             document.body.style.overflow = 'unset';
         };
     }, [isOpen]);
-
-    useEffect(() => {
-        if (currentSong?.lyricsBrowseId) {
-            setLyricsBrowseId(currentSong.lyricsBrowseId);
-        } else if (currentSong?.videoId && activeTab === 'lyrics' && !lyricsBrowseId) {
-            fetch(`http://localhost:8000/api/songs/${currentSong.videoId}`)
-                .then(res => res.json())
-                .then(data => {
-                    if (data.lyricsBrowseId) {
-                        setLyricsBrowseId(data.lyricsBrowseId);
-                    }
-                })
-                .catch(() => { });
-        }
-    }, [currentSong?.videoId, activeTab, currentSong?.lyricsBrowseId, lyricsBrowseId]);
 
     const handleQueueItemClick = (index: number) => {
         // Don't play if same song
@@ -173,7 +157,7 @@ export default function QueueView({ isOpen, onClose }: QueueViewProps) {
                                     : 'opacity-0 translate-x-full pointer-events-none'
                                     }`}
                             >
-                                <LyricsView lyricsBrowseId={lyricsBrowseId} />
+                                <LyricsView lyricsBrowseId={currentSong?.lyricsBrowseId} />
                             </div>
                         </div>
                     </div>

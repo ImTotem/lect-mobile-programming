@@ -162,7 +162,7 @@ async def get_featured_playlists(
     limit: int = Query(10, ge=1, le=20, description="결과 개수")
 ):
     try:
-        home = ytmusic.get_home(limit=limit)
+        home = ytmusic.get_home(limit=50)
         
         playlists = []
         # '나를 위한 추천 재생목록' 섹션 찾기
@@ -170,7 +170,7 @@ async def get_featured_playlists(
             section_title = section.get("title", "")
             
             # '나를 위한 추천 재생목록' 섹션만 처리
-            if section_title == "나를 위한 추천 재생목록" and section.get("contents"):
+            if section_title == "맞춤 추천 뮤직 스테이션" and section.get("contents"):
                 for item in section["contents"]:
                     # playlistId가 있는 항목만 처리
                     playlist_id = item.get("playlistId")
