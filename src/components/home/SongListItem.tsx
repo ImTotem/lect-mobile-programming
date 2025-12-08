@@ -25,11 +25,13 @@ export default function SongListItem({
         alt={song.title}
         onError={(e) => {
           const target = e.currentTarget;
-          if (!target.src.includes('mqdefault') && !target.src.includes('default')) {
-            target.src = `https://i.ytimg.com/vi/${song.id}/mqdefault.jpg`;
-          } else if (target.src.includes('mqdefault')) {
-            target.src = `https://i.ytimg.com/vi/${song.id}/default.jpg`;
+          if (target.src.includes('lh3.googleusercontent.com')) {
+            if (!target.src.includes('=w60-h60')) {
+              target.src = target.src.replace(/=w\d+-h\d+/, '=w60-h60');
+              return;
+            }
           }
+          target.style.display = 'none';
         }}
         className="w-14 h-14 rounded-lg object-cover shadow-sm"
       />

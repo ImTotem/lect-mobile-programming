@@ -48,8 +48,7 @@ async def root():
     return {
         "message": "YouTube Music API",
         "docs": "/docs",
-        "version": "1.0.0",
-        "authenticated": True
+        "version": "1.0.0"
     }
 
 
@@ -102,7 +101,6 @@ async def get_search_suggestions(
         suggestions = ytmusic.get_search_suggestions(q, detailed_runs=False)
         return {"results": suggestions}
     except Exception as e:
-        print(f"Suggestions error: {e}")
         return {"results": []}
 
 
@@ -282,7 +280,6 @@ async def get_song(video_id: str):
                 thumbnail = cached.get('thumbnail', '')
                 duration = cached.get('duration', '0')
                 lyrics_browse_id = cached.get('lyricsBrowseId')
-                print(f"Cache hit for {video_id}")
             else:
                 # 만료된 캐시 삭제
                 del url_cache[video_id]
@@ -317,10 +314,8 @@ async def get_song(video_id: str):
                             'lyricsBrowseId': None,  # 나중에 업데이트
                             'expires_at': now + timedelta(hours=5)
                         }
-                        print(f"Cached {video_id}")
                         
             except Exception as e:
-                print(f"yt-dlp error: {e}")
                 audio_url = None
         
         # 2. ytmusicapi로 메타데이터 보완 (yt-dlp가 실패하거나 메타데이터가 부족한 경우)
@@ -351,10 +346,9 @@ async def get_song(video_id: str):
                     if video_id in url_cache:
                         url_cache[video_id]['lyricsBrowseId'] = lyrics_browse_id
                 except Exception as lyrics_error:
-                    print(f"Failed to get lyrics browse ID: {lyrics_error}")
-                
+                    pass
         except Exception as meta_error:
-            print(f"ytmusicapi metadata error: {meta_error}")
+            pass
         
         return {
             "id": video_id,
@@ -420,7 +414,6 @@ async def get_lyrics(browse_id: str):
         else:
             lyrics_formatted = None
         
-        print(f"Lyrics for {browse_id}: hasTimestamps={has_timestamps}, lines={len(lyrics_lines) if isinstance(lyrics_lines, list) else 'N/A'}")
         
         return {
             "lyrics": lyrics_formatted,

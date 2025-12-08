@@ -72,11 +72,13 @@ export default function LibraryPage({ isSidebarOpen }: LibraryPageProps) {
                                             className="w-full h-full object-cover"
                                             onError={(e) => {
                                                 const target = e.currentTarget;
-                                                if (!target.src.includes('mqdefault') && !target.src.includes('default')) {
-                                                    target.src = `https://i.ytimg.com/vi/${song.id}/mqdefault.jpg`;
-                                                } else if (target.src.includes('mqdefault')) {
-                                                    target.src = `https://i.ytimg.com/vi/${song.id}/default.jpg`;
+                                                if (target.src.includes('lh3.googleusercontent.com')) {
+                                                    if (!target.src.includes('=w60-h60')) {
+                                                        target.src = target.src.replace(/=w\d+-h\d+/, '=w60-h60');
+                                                        return;
+                                                    }
                                                 }
+                                                target.style.display = 'none';
                                             }}
                                         />
                                         <div className={`absolute inset-0 bg-black/40 flex items-center justify-center transition-opacity ${isCurrent ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'

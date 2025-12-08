@@ -29,7 +29,6 @@ export default function HomePage({ isSidebarOpen }: HomePageProps) {
         setTrendingSongs(songs);
         setPlaylists(featuredPlaylists);
       } catch (error) {
-        console.error('Failed to fetch data:', error);
       } finally {
         setIsLoading(false);
       }
@@ -57,7 +56,6 @@ export default function HomePage({ isSidebarOpen }: HomePageProps) {
         console.warn('No tracks found in playlist:', playlist.title);
       }
     } catch (error) {
-      console.error('Failed to play playlist:', error);
     }
   };
 

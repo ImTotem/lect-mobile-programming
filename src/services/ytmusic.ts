@@ -24,7 +24,6 @@ export async function searchMusic(query: string): Promise<Song[]> {
     const data = await ytmusicFetch(`/api/search?q=${encodeURIComponent(query)}&limit=20`);
     return data.results || [];
   } catch (error) {
-    console.error('Search error:', error);
     return [];
   }
 }
@@ -37,7 +36,6 @@ export async function getSearchSuggestions(query: string): Promise<string[]> {
     const data = await ytmusicFetch(`/api/search/suggestions?q=${encodeURIComponent(query)}`);
     return data.results || [];
   } catch (error) {
-    console.error('Suggestions error:', error);
     return [];
   }
 }
@@ -52,7 +50,6 @@ export async function getChartList(): Promise<any[]> {
     const data = await ytmusicFetch('/api/charts/list');
     return data.results || [];
   } catch (error) {
-    console.error('Chart list error:', error);
     return [];
   }
 }
@@ -65,7 +62,6 @@ export async function getMoodPlaylists(params: string): Promise<Playlist[]> {
     const data = await ytmusicFetch(`/api/moods/playlists?params=${encodeURIComponent(params)}`);
     return data.results || [];
   } catch (error) {
-    console.error('Mood playlists error:', error);
     return [];
   }
 }
@@ -78,7 +74,6 @@ export async function getTrendingMusic(): Promise<Song[]> {
     const data = await ytmusicFetch('/api/charts?limit=20');
     return data.results || [];
   } catch (error) {
-    console.error('Trending music error:', error);
     return [];
   }
 }
@@ -91,7 +86,6 @@ export async function getFeaturedPlaylists(): Promise<Playlist[]> {
     const data = await ytmusicFetch('/api/playlists/featured?limit=10');
     return data.results || [];
   } catch (error) {
-    console.error('Featured playlists error:', error);
     return [];
   }
 }
@@ -104,7 +98,6 @@ export async function getPlaylistTracks(playlistId: string | number): Promise<So
     const data = await ytmusicFetch(`/api/playlists/${playlistId}?limit=50`);
     return data.tracks || [];
   } catch (error) {
-    console.error('Playlist tracks error:', error);
     return [];
   }
 }
@@ -123,7 +116,6 @@ export async function getPlaylist(playlistId: string | number): Promise<Playlist
       tracksCount: data.tracksCount
     };
   } catch (error) {
-    console.error('Playlist info error:', error);
     return null;
   }
 }
@@ -136,7 +128,6 @@ export async function getSongStreamUrl(videoId: string): Promise<string | null> 
     const data = await ytmusicFetch(`/api/songs/${videoId}`);
     return data.streamUrl || null;
   } catch (error) {
-    console.error('Stream URL error:', error);
     return null;
   }
 }
@@ -149,7 +140,6 @@ export async function getSongInfo(videoId: string): Promise<any> {
     const data = await ytmusicFetch(`/api/songs/${videoId}`);
     return data;
   } catch (error) {
-    console.error('Song info error:', error);
     return null;
   }
 }
@@ -176,8 +166,7 @@ export async function playAudio(videoId: string): Promise<HTMLAudioElement | nul
     await audio.play();
     return audio;
   } catch (error) {
-    console.error('Play audio error:', error);
-    return null;
+    throw error;
   }
 }
 
@@ -189,7 +178,6 @@ export async function getMoodCategories(): Promise<any> {
     const data = await ytmusicFetch('/api/moods');
     return data;
   } catch (error) {
-    console.error('Mood categories error:', error);
-    return {};
+    return [];
   }
 }

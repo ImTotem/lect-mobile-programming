@@ -31,7 +31,7 @@ export default function GenreDetail({
                 const data = await getMoodPlaylists(genreParams);
                 setPlaylists(data);
             } catch (error) {
-                console.error('Failed to fetch genre playlists:', error);
+                setLoading(false);
             } finally {
                 setLoading(false);
             }

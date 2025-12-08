@@ -6,7 +6,6 @@ export { default as LyricsView } from './LyricsView';
 export { default as SearchBar } from './SearchBar';
 export { default as Logo } from './Logo';
 export { default as NavItem } from './NavItem';
-export { default as UserButton } from './UserButton';
 export { default as PlayerControls } from './PlayerControls';
 export { default as ProgressBar } from './ProgressBar';
 export { default as SongInfo } from './SongInfo';

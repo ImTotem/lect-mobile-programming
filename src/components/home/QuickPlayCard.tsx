@@ -17,11 +17,13 @@ export default function QuickPlayCard({ song, onClick }: QuickPlayCardProps) {
         alt={song.title}
         onError={(e) => {
           const target = e.currentTarget;
-          if (!target.src.includes('mqdefault') && !target.src.includes('default')) {
-            target.src = `https://i.ytimg.com/vi/${song.id}/mqdefault.jpg`;
-          } else if (target.src.includes('mqdefault')) {
-            target.src = `https://i.ytimg.com/vi/${song.id}/default.jpg`;
+          if (target.src.includes('lh3.googleusercontent.com')) {
+            if (!target.src.includes('=w120-h120')) {
+              target.src = target.src.replace(/=w\d+-h\d+/, '=w120-h120');
+              return;
+            }
           }
+          target.style.display = 'none';
         }}
         className="w-16 h-16 rounded-lg object-cover"
       />

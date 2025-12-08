@@ -26,15 +26,12 @@ export default function SongInfo({
         onError={(e) => {
           if (!id) return;
           const target = e.currentTarget;
-          // Try resizing lh3 image if it fails (progressive degradation)
           if (target.src.includes('lh3.googleusercontent.com')) {
             if (!target.src.includes('=w60-h60')) {
-              // Try smallest size
               target.src = target.src.replace(/=w\d+-h\d+/, '=w60-h60');
               return;
             }
           }
-          // If fallback fails or not lh3, hide it
           target.style.display = 'none';
         }}
       />

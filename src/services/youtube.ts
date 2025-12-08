@@ -52,7 +52,7 @@ async function fetchWithProxy(url: string): Promise<Response> {
     const proxyUrl = CORS_PROXIES[proxyIndex](url);
 
     try {
-      console.log(`Trying proxy ${proxyIndex + 1}:`, proxyUrl);
+
       const response = await fetch(proxyUrl);
 
       if (!response.ok) {
@@ -104,8 +104,7 @@ export async function searchMusic(query: string): Promise<Song[]> {
         videoId: item.videoId,
       }));
   } catch (error) {
-    console.error('Music search error:', error);
-    throw error;
+    return [];
   }
 }
 
@@ -126,8 +125,7 @@ export async function getTrendingMusic(): Promise<Song[]> {
       videoId: item.videoId,
     }));
   } catch (error) {
-    console.error('Trending music error:', error);
-    throw error;
+    return [];
   }
 }
 
@@ -145,7 +143,6 @@ export async function getStreamUrl(videoId: string): Promise<string | null> {
 
     return audioFormat?.url || null;
   } catch (error) {
-    console.error('Stream URL error:', error);
     return null;
   }
 }

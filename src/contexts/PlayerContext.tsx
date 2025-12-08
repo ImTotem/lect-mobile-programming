@@ -142,7 +142,6 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
         if (abortController.signal.aborted) return;
 
         if (!songInfo || !songInfo.streamUrl) {
-          console.error('스트리밍 URL을 가져올 수 없습니다.');
           setIsLoading(false);
           return;
         }
@@ -154,7 +153,6 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
         };
         setCurrentSong(updatedSong);
       } else {
-        console.error('재생 가능한 URL이 없습니다.');
         setIsLoading(false);
         return;
       }
@@ -169,7 +167,6 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       await audio.play();
     } catch (error) {
       if (abortController.signal.aborted) return;
-      console.error('다음 곡 재생 실패:', error);
       setIsLoading(false);
       setIsPlaying(false);
     }
@@ -229,7 +226,6 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       if (song.videoId) {
         const songInfo = await getSongInfo(song.videoId as string);
         if (!songInfo || !songInfo.streamUrl) {
-          console.error('스트리밍 URL을 가져올 수 없습니다.');
           alert('이 곡은 현재 재생할 수 없습니다.');
           setIsLoading(false);
           return;
@@ -239,7 +235,6 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
         setCurrentSong(updatedSong);
         if (addToQueue) addSongToQueue(updatedSong);
       } else {
-        console.error('재생 가능한 URL이 없습니다.');
         setIsLoading(false);
         return;
       }
@@ -250,7 +245,6 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       setIsPlaying(true);
       await audio.play();
     } catch (error) {
-      console.error('재생 실패:', error);
       setIsLoading(false);
       setIsPlaying(false);
     }
@@ -283,7 +277,6 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
         const songInfo = await getSongInfo(song.videoId as string);
         if (abortController.signal.aborted) return;
         if (!songInfo || !songInfo.streamUrl) {
-          console.error('스트리밍 URL을 가져올 수 없습니다.');
           setIsLoading(false);
           return;
         }
@@ -303,7 +296,6 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       await audio.play();
     } catch (error) {
       if (abortController.signal.aborted) return;
-      console.error('큐 재생 실패:', error);
       setIsLoading(false);
       setIsPlaying(false);
     }
@@ -378,7 +370,6 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       await audio.play();
     } catch (error) {
       if (abortController.signal.aborted) return;
-      console.error('이전 곡 재생 실패:', error);
       setIsLoading(false);
       setIsPlaying(false);
     }

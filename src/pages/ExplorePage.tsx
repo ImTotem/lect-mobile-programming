@@ -56,7 +56,6 @@ export default function ExplorePage({ isSidebarOpen, onNavigate }: ExplorePagePr
         setCharts(chartList as Chart[]);
 
       } catch (error) {
-        console.error('Failed to fetch explore data:', error);
       } finally {
         setLoading(false);
       }

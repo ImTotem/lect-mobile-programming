@@ -97,7 +97,6 @@ function AppContent() {
       <Header
         onMenuClick={toggleSidebar}
         onNavigate={handleNavigate}
-        isSidebarOpen={isSidebarOpen}
         onLogoClick={() => {
           setCurrentPage({ type: 'home' });
           setIsQueueViewOpen(false);

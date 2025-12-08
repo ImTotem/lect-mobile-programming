@@ -43,7 +43,6 @@ export default function PlaylistDetail({
 
                 setSongs(tracksData);
             } catch (error) {
-                console.error('Failed to fetch playlist tracks:', error);
             } finally {
                 setLoading(false);
             }

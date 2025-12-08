@@ -34,9 +34,9 @@ export default function LyricsView({ lyricsBrowseId }: LyricsViewProps) {
                     setSource(data.source);
                 }
             })
-            .catch((err) => {
-                console.error('[LyricsView] Lyrics fetch error:', err);
-                setError('가사를 불러오는 중 오류가 발생했습니다.');
+            .catch(() => {
+                setLyrics(null);
+                setLoading(false); // Corrected from setIsLoading to setLoading
             })
             .finally(() => {
                 setLoading(false);

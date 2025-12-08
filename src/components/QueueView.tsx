@@ -14,9 +14,6 @@ export default function QueueView({ isOpen, onClose }: QueueViewProps) {
     const [activeTab, setActiveTab] = useState<TabType>('queue');
     const [lyricsBrowseId, setLyricsBrowseId] = useState<string | undefined>();
 
-    console.log('[QueueView] Render:', { isOpen, activeTab, lyricsBrowseId, currentSongId: currentSong?.videoId });
-
-    // Prevent background scroll when open
     useEffect(() => {
         if (isOpen) {
             document.body.style.overflow = 'hidden';
@@ -28,31 +25,18 @@ export default function QueueView({ isOpen, onClose }: QueueViewProps) {
         };
     }, [isOpen]);
 
-    // Fetch lyricsBrowseId if missing
     useEffect(() => {
-        console.log('[QueueView] Lyrics fetch useEffect:', {
-            hasLyricsBrowseId: !!currentSong?.lyricsBrowseId,
-            videoId: currentSong?.videoId,
-            activeTab,
-            lyricsBrowseId
-        });
-
         if (currentSong?.lyricsBrowseId) {
-            console.log('[QueueView] Setting lyricsBrowseId from currentSong:', currentSong.lyricsBrowseId);
             setLyricsBrowseId(currentSong.lyricsBrowseId);
         } else if (currentSong?.videoId && activeTab === 'lyrics' && !lyricsBrowseId) {
-            // Lazy fetch when lyrics tab is opened and not already fetched
-            console.log('[QueueView] Fetching lyricsBrowseId for videoId:', currentSong.videoId);
             fetch(`http://localhost:8000/api/songs/${currentSong.videoId}`)
                 .then(res => res.json())
                 .then(data => {
-                    console.log('[QueueView] Received song data:', data);
                     if (data.lyricsBrowseId) {
-                        console.log('[QueueView] Setting lyricsBrowseId from API:', data.lyricsBrowseId);
                         setLyricsBrowseId(data.lyricsBrowseId);
                     }
                 })
-                .catch(err => console.error('[QueueView] Failed to fetch lyricsBrowseId:', err));
+                .catch(() => { });
         }
     }, [currentSong?.videoId, activeTab, currentSong?.lyricsBrowseId, lyricsBrowseId]);
 

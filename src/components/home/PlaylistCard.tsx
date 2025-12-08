@@ -14,7 +14,6 @@ export default function PlaylistCard({ playlist, onClick }: PlaylistCardProps) {
           src={playlist.thumbnail}
           alt={playlist.title}
           onError={(e) => {
-            // Hide image to show background color if loading fails
             e.currentTarget.style.display = 'none';
           }}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"

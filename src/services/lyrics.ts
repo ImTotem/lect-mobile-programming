@@ -15,7 +15,6 @@ export async function getLyrics(browseId: string): Promise<LyricsResponse> {
         const data = await response.json();
         return data;
     } catch (error) {
-        console.error('Failed to fetch lyrics:', error);
         return {
             lyrics: null,
             hasTimestamps: false,

@@ -28,7 +28,7 @@ export default function SearchBar({ onSearch }: SearchBarProps) {
           setShowSuggestions(true);
           setSelectedIndex(-1); // Reset selection on new results
         } catch (error) {
-          console.error('Failed to fetch suggestions:', error);
+          setSuggestions([]);
         } finally {
           setIsSearching(false);
         }

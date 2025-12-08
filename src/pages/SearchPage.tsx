@@ -24,7 +24,6 @@ export default function SearchPage({ query, isSidebarOpen }: SearchPageProps) {
                 const results = await searchMusic(query);
                 setSongs(results);
             } catch (error) {
-                console.error('Failed to search music:', error);
             } finally {
                 setLoading(false);
             }
