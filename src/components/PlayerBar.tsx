@@ -1,4 +1,5 @@
 import { usePlayer } from '../contexts/PlayerContext';
+import { useStorage } from '../contexts/StorageContext';
 import { SongInfo, PlayerControls, ProgressBar, VolumeControl } from './index';
 
 interface PlayerBarProps {
@@ -14,18 +15,17 @@ export default function PlayerBar({ onExpand }: PlayerBarProps) {
     duration,
     volume,
     repeatMode,
-    isShuffle, // Get from context
+    isShuffle,
     togglePlay,
     setVolume,
     seek,
     playNext,
     playPrevious,
     setRepeatMode,
-    toggleShuffle, // Get from context
+    toggleShuffle,
   } = usePlayer();
 
-  // Remove local isShuffle state
-  // const [isShuffle, setIsShuffle] = useState(false);
+  const { isLiked, toggleLike } = useStorage();
 
   const handleRepeatToggle = () => {
     setRepeatMode(
@@ -34,7 +34,7 @@ export default function PlayerBar({ onExpand }: PlayerBarProps) {
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 bg-white">
+    <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-100 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
       <ProgressBar currentTime={currentTime} duration={duration} onChange={seek} />
 
       <div
@@ -46,12 +46,15 @@ export default function PlayerBar({ onExpand }: PlayerBarProps) {
           <div className="flex-1 min-w-0">
             {currentSong ? (
               <SongInfo
+                id={currentSong.id}
                 title={currentSong.title}
                 artist={currentSong.artist}
                 thumbnail={currentSong.thumbnail}
+                isLiked={isLiked(currentSong.id)}
+                onToggleLike={() => toggleLike(currentSong)}
               />
             ) : (
-              <div className="text-gray-400 text-sm">
+              <div className="text-gray-400 text-sm pl-2">
                 재생 중인 음악이 없습니다
               </div>
             )}

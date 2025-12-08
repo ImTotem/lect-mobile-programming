@@ -15,6 +15,12 @@ export default function ChartCard({ chart, onClick }: ChartCardProps) {
       <img
         src={chart.thumbnail}
         alt={chart.title}
+        onError={(e) => {
+          e.currentTarget.style.display = 'none';
+          e.currentTarget.parentElement?.querySelector('.flex-1')?.classList.add('pl-2'); // Add padding if image gone? Or just hide it.
+          // Actually, hiding the image is fine, the text will shift left or stay.
+          // In this flex layout, hiding img (w-16) will shift text left.
+        }}
         className="w-16 h-16 rounded-lg object-cover shadow-sm"
       />
       <div className="flex-1 text-left">

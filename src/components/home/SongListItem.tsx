@@ -23,6 +23,14 @@ export default function SongListItem({
       <img
         src={song.thumbnail}
         alt={song.title}
+        onError={(e) => {
+          const target = e.currentTarget;
+          if (!target.src.includes('mqdefault') && !target.src.includes('default')) {
+            target.src = `https://i.ytimg.com/vi/${song.id}/mqdefault.jpg`;
+          } else if (target.src.includes('mqdefault')) {
+            target.src = `https://i.ytimg.com/vi/${song.id}/default.jpg`;
+          }
+        }}
         className="w-14 h-14 rounded-lg object-cover shadow-sm"
       />
       <div className="flex-1 min-w-0">

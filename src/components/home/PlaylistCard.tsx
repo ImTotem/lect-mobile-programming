@@ -13,6 +13,10 @@ export default function PlaylistCard({ playlist, onClick }: PlaylistCardProps) {
         <img
           src={playlist.thumbnail}
           alt={playlist.title}
+          onError={(e) => {
+            // Hide image to show background color if loading fails
+            e.currentTarget.style.display = 'none';
+          }}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
         />
         <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">

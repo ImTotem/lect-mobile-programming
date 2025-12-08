@@ -1,12 +1,14 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocalStorage } from './hooks';
-import { PlayerProvider } from './contexts';
+import { PlayerProvider, StorageProvider, usePlayer, useStorage } from './contexts';
 import { Header, Sidebar, PlayerBar, QueueView } from './components';
 import HomePage from './pages/HomePage';
 import ExplorePage from './pages/ExplorePage';
 import GenreDetail from './pages/GenreDetail';
 import PlaylistDetail from './pages/PlaylistDetail';
 import SearchPage from './pages/SearchPage';
+import LibraryPage from './pages/LibraryPage';
+import RecentPage from './pages/RecentPage';
 
 type PageState =
   | { type: 'home' }
@@ -17,14 +19,24 @@ type PageState =
   | { type: 'genre'; params: string; title: string; color?: string }
   | { type: 'search'; query: string };
 
-function App() {
+// Helper component to handle side effects (like adding to recent) that need both contexts
+function AppContent() {
   const [isSidebarOpen, setIsSidebarOpen] = useLocalStorage('sidebar-open', true);
-  // Default to home, but use object state
   const [currentPage, setCurrentPage] = useState<PageState>({ type: 'home' });
   const [isQueueViewOpen, setIsQueueViewOpen] = useState(false);
 
+  const { currentSong } = usePlayer();
+  const { addToRecent } = useStorage();
+
+  // Add current song to recents when it changes
+  useEffect(() => {
+    if (currentSong) {
+      addToRecent(currentSong);
+    }
+  }, [currentSong, addToRecent]);
+
   const toggleSidebar = () => {
-    setIsSidebarOpen((prev) => !prev);
+    setIsSidebarOpen((prev: boolean) => !prev);
   };
 
   const handleNavigate = (page: PageState) => {
@@ -61,7 +73,7 @@ function App() {
             isSidebarOpen={isSidebarOpen}
             playlistId={currentPage.playlistId}
             initialTitle={currentPage.title}
-            onBack={() => setCurrentPage({ type: 'explore' })} // Or go back to genre if history existed
+            onBack={() => setCurrentPage({ type: 'explore' })}
           />
         );
       case 'search':
@@ -72,59 +84,51 @@ function App() {
           />
         );
       case 'library':
-        return (
-          <div className={`min-h-screen bg-white pt-16 pb-28 transition-all duration-300 ${isSidebarOpen ? 'pl-0 lg:pl-64' : 'pl-0 lg:pl-20'
-            }`}>
-            <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-              <h1 className="text-4xl font-bold text-gray-900">보관함</h1>
-              <p className="text-gray-600 mt-2">준비 중입니다...</p>
-            </div>
-          </div>
-        );
+        return <LibraryPage isSidebarOpen={isSidebarOpen} />;
       case 'recent':
-        return (
-          <div className={`min-h-screen bg-white pt-16 pb-28 transition-all duration-300 ${isSidebarOpen ? 'pl-0 lg:pl-64' : 'pl-0 lg:pl-20'
-            }`}>
-            <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-              <h1 className="text-4xl font-bold text-gray-900">최근 재생</h1>
-              <p className="text-gray-600 mt-2">준비 중입니다...</p>
-            </div>
-          </div>
-        );
+        return <RecentPage isSidebarOpen={isSidebarOpen} />;
       default:
         return <HomePage isSidebarOpen={isSidebarOpen} />;
     }
   };
 
   return (
-    <PlayerProvider>
-      <div className="min-h-screen bg-white">
-        <Header
-          onMenuClick={toggleSidebar}
-          onNavigate={handleNavigate}
-          isSidebarOpen={isSidebarOpen}
-          onLogoClick={() => {
-            setCurrentPage({ type: 'home' });
-            setIsQueueViewOpen(false);
-          }}
-        />
-        <Sidebar
-          isOpen={isSidebarOpen}
-          onClose={() => setIsSidebarOpen(false)}
-          currentPage={currentPage.type === 'home' || currentPage.type === 'explore' || currentPage.type === 'library' || currentPage.type === 'recent' ? currentPage.type : 'explore'}
-          onNavigate={(page) => {
-            handleNavigate({ type: page });
-            setIsQueueViewOpen(false);
-          }}
-        />
-        {renderPage()}
-        <PlayerBar onExpand={() => setIsQueueViewOpen(!isQueueViewOpen)} />
-        <QueueView
-          isOpen={isQueueViewOpen}
-          onClose={() => setIsQueueViewOpen(false)}
-        />
-      </div>
-    </PlayerProvider>
+    <div className="min-h-screen bg-white">
+      <Header
+        onMenuClick={toggleSidebar}
+        onNavigate={handleNavigate}
+        isSidebarOpen={isSidebarOpen}
+        onLogoClick={() => {
+          setCurrentPage({ type: 'home' });
+          setIsQueueViewOpen(false);
+        }}
+      />
+      <Sidebar
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+        currentPage={currentPage.type === 'home' || currentPage.type === 'explore' || currentPage.type === 'library' || currentPage.type === 'recent' ? currentPage.type : 'explore'}
+        onNavigate={(page) => {
+          handleNavigate({ type: page });
+          setIsQueueViewOpen(false);
+        }}
+      />
+      {renderPage()}
+      <PlayerBar onExpand={() => setIsQueueViewOpen(!isQueueViewOpen)} />
+      <QueueView
+        isOpen={isQueueViewOpen}
+        onClose={() => setIsQueueViewOpen(false)}
+      />
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <StorageProvider>
+      <PlayerProvider>
+        <AppContent />
+      </PlayerProvider>
+    </StorageProvider>
   );
 }
 
