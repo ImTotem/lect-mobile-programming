@@ -64,22 +64,22 @@ export default function QueueView({ isOpen, onClose }: QueueViewProps) {
             >
                 {/* Main Content - with bottom padding for player bar */}
                 <div className="h-full flex flex-col lg:flex-row overflow-hidden pb-20">
-                    {/* Left Side - Album Art (Mobile: Top, Desktop: Left 2/3) */}
-                    <div className="flex-shrink-0 lg:flex-[2] flex items-center justify-center p-8 lg:p-12 overflow-y-auto bg-gradient-to-br from-gray-100 to-gray-50">
+                    {/* Left Side - Album Art (Mobile: Compact Top, Desktop: Left 2/3) */}
+                    <div className="flex-shrink-0 lg:flex-[2] flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-50 max-h-48 lg:max-h-full p-4 lg:p-12 lg:overflow-y-auto transition-all duration-300">
                         {currentSong && (
-                            <div className="w-full max-w-lg">
-                                <div className="w-full aspect-square mb-6 rounded-2xl overflow-hidden shadow-2xl ring-1 ring-black/5">
+                            <div className="w-full max-w-lg flex lg:flex-col items-center gap-4 lg:gap-0 lg:h-auto transition-all duration-300">
+                                <div className="w-32 h-32 lg:w-full lg:h-auto lg:aspect-square rounded-xl lg:rounded-2xl overflow-hidden shadow-2xl ring-1 ring-black/5 flex-shrink-0 lg:mb-6 transition-all duration-300">
                                     <img
                                         src={currentSong.thumbnail.replace('w120-h120', 'w600-h600')}
                                         alt={currentSong.title}
                                         className="w-full h-full object-cover"
                                     />
                                 </div>
-                                <div className="text-center">
-                                    <h1 className="text-2xl lg:text-3xl font-bold mb-2 text-gray-900">
+                                <div className="text-left lg:text-center flex-1 lg:flex-initial min-w-0 transition-all duration-300">
+                                    <h1 className="text-lg lg:text-3xl font-bold mb-1 lg:mb-2 text-gray-900 truncate lg:whitespace-normal transition-all duration-300">
                                         {currentSong.title}
                                     </h1>
-                                    <p className="text-lg text-gray-600">{currentSong.artist}</p>
+                                    <p className="text-sm lg:text-lg text-gray-600 truncate lg:whitespace-normal transition-all duration-300">{currentSong.artist}</p>
                                 </div>
                             </div>
                         )}
